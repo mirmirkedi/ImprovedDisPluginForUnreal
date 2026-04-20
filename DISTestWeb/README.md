@@ -7,13 +7,13 @@ Local browser + Node.js test tool for sending one DIS `EntityStatePDU` into the 
 From the project root:
 
 ```bash
-node Tools/DISTestWeb/server.js
+node DISTestWeb/server.js
 ```
 
 For LAN/public access on the same network:
 
 ```bash
-node Tools/DISTestWeb/server.js public
+node DISTestWeb/server.js public
 ```
 
 Then open:
@@ -30,8 +30,8 @@ http://192.168.1.34:7070
 
 Quick launchers:
 
-- macOS: `Tools/DISTestWeb/start_dis_test_web.command`
-- Windows: `Tools\DISTestWeb\start_dis_test_web.cmd`
+- macOS: `DISTestWeb/start_dis_test_web.command`
+- Windows: `DISTestWeb\\start_dis_test_web.cmd`
 
 ## What it does
 
@@ -76,4 +76,4 @@ Quick launchers:
 
 - This uses only Node built-ins, no npm install is required.
 - Browser JavaScript cannot send raw UDP directly, so `server.js` acts as the local UDP bridge.
-- Replay files are saved under `Tools/DISTestWeb/replays`.
+- Replay files are saved under `DISTestWeb/replays`.
