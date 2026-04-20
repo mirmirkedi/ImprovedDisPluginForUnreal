@@ -1,0 +1,3310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DIS Local Test Console</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-2: #1f2630;
+      --line: #2f3946;
+      --text: #e6edf3;
+      --muted: #93a1b3;
+      --accent: #4cc2ff;
+      --accent-2: #7cf29a;
+      --warn: #ffb454;
+      --danger: #ff7b72;
+      --sidebar-width: 380px;
+      --page-gap: 20px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background:
+        radial-gradient(circle at top left, rgba(76, 194, 255, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(124, 242, 154, 0.10), transparent 26%),
+        linear-gradient(180deg, #0b0f14, var(--bg));
+      color: var(--text);
+      overflow: hidden;
+    }
+    .wrap {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+    .sidebar, .main {
+      padding: 20px;
+      min-height: 0;
+    }
+    .sidebar {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--sidebar-width);
+      border-right: 1px solid var(--line);
+      background: rgba(22, 27, 34, 0.86);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      height: 100vh;
+    }
+    .sidebar-scroll {
+      height: 100%;
+      max-height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+      padding-right: 4px;
+    }
+    .main {
+      position: absolute;
+      inset: 0 0 0 var(--sidebar-width);
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 16px;
+      min-height: 0;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .main > * {
+      min-width: 0;
+    }
+    h1, h2 {
+      margin: 0 0 12px;
+      font-weight: 700;
+    }
+    h1 { font-size: 22px; }
+    h2 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .card {
+      background: linear-gradient(180deg, rgba(31, 38, 48, 0.92), rgba(22, 27, 34, 0.92));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    input, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0f141b;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+    .input-with-button {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .mini-btn {
+      min-width: 44px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: var(--text);
+      background: #212a36;
+      border: 1px solid var(--line);
+      font-size: 12px;
+      line-height: 1;
+    }
+    .mini-btn:hover {
+      background: #2a3544;
+    }
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font: inherit;
+      cursor: pointer;
+      color: #061018;
+      background: linear-gradient(135deg, var(--accent), #7eb6ff);
+      font-weight: 700;
+    }
+    button.secondary {
+      color: var(--text);
+      background: #212a36;
+      border: 1px solid var(--line);
+    }
+    button:disabled {
+      opacity: 0.46;
+      cursor: not-allowed;
+      filter: saturate(0.75);
+    }
+    button.secondary:disabled {
+      background: #1a222d;
+      border-color: rgba(255,255,255,0.06);
+      color: #7d8a9b;
+    }
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .button-row.three {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(76, 194, 255, 0.12);
+      border: 1px solid rgba(76, 194, 255, 0.28);
+      color: var(--accent);
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    canvas {
+      width: 100%;
+      height: min(62vh, 700px);
+      background: #0d131b;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      display: block;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .stat {
+      background: rgba(15, 20, 27, 0.8);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .stat strong {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .stat span {
+      font-size: 16px;
+      line-height: 1.35;
+    }
+    .help {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 13px;
+    }
+    .help b { color: var(--warn); }
+    .mono { font-variant-numeric: tabular-nums; }
+    .map-card {
+      padding: 12px;
+      margin-bottom: 0;
+    }
+    .entity-tabs {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 2px;
+    }
+    .entity-tabs-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 12px;
+      align-items: start;
+      min-width: 0;
+    }
+    .settings-dropdown .dropdown-menu {
+      width: min(260px, calc(100vw - 64px));
+      left: auto;
+      right: 0;
+    }
+    .settings-grid {
+      display: grid;
+      gap: 10px;
+    }
+    .settings-grid label {
+      margin-bottom: 0;
+    }
+    .entity-tabs::-webkit-scrollbar {
+      height: 10px;
+    }
+    .entity-tabs::-webkit-scrollbar-thumb {
+      background: #314052;
+      border-radius: 999px;
+    }
+    .entity-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #111821;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+    .entity-tab.active {
+      color: var(--text);
+      background: rgba(76, 194, 255, 0.12);
+      border-color: rgba(76, 194, 255, 0.28);
+    }
+    .entity-tab-running {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #3c4756;
+      flex: 0 0 auto;
+    }
+    .entity-tab.is-running .entity-tab-running {
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(76, 194, 255, 0.12);
+    }
+    .entity-tab-label {
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .entity-tab-close {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      font-size: 12px;
+      line-height: 1;
+      padding: 0;
+    }
+    .entity-tab-close:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.08);
+    }
+    .entity-add-btn {
+      flex: 0 0 auto;
+    }
+    .entity-clear-btn {
+      flex: 0 0 auto;
+      align-self: start;
+    }
+    .log-card {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100%;
+      min-height: 640px;
+      margin-bottom: 0;
+      overflow: hidden;
+    }
+    .log-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .log-toolbar-spacer {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .check input {
+      width: auto;
+      margin: 0;
+    }
+    .log-view {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #0b1016;
+      padding: 12px;
+      overflow: auto;
+      min-height: 0;
+      height: 100%;
+      scrollbar-gutter: stable;
+      scrollbar-width: auto;
+      scrollbar-color: #42556d #111821;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+    .log-view::-webkit-scrollbar {
+      width: 14px;
+      height: 14px;
+    }
+    .log-view::-webkit-scrollbar-track {
+      background: #111821;
+      border-radius: 12px;
+    }
+    .log-view::-webkit-scrollbar-thumb {
+      background: #42556d;
+      border-radius: 12px;
+      border: 3px solid #111821;
+    }
+    .log-view::-webkit-scrollbar-thumb:hover {
+      background: #55708e;
+    }
+    .log-line {
+      margin-bottom: 8px;
+      border-bottom: 1px dashed rgba(255,255,255,0.06);
+      padding-bottom: 8px;
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
+    .log-index {
+      color: var(--muted);
+      text-align: right;
+      user-select: none;
+    }
+    .log-text {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .log-expand {
+      min-width: 32px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      color: var(--muted);
+      background: #18202a;
+      border: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .log-details {
+      grid-column: 2 / 4;
+      margin-top: 6px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      white-space: pre-wrap;
+      font-size: 12px;
+      line-height: 1.5;
+      position: relative;
+    }
+    .log-copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      min-width: 72px;
+      padding: 7px 10px;
+      border-radius: 9px;
+      color: var(--text);
+      background: #212a36;
+      border: 1px solid var(--line);
+      font-size: 12px;
+      line-height: 1;
+    }
+    .log-copy-btn:hover {
+      background: #2a3544;
+    }
+    .log-details-pre {
+      white-space: pre-wrap;
+      margin: 0;
+      padding-right: 92px;
+    }
+    .dropdown {
+      position: relative;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: min(320px, calc(100vw - 64px));
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #141b24;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      z-index: 20;
+      display: none;
+    }
+    .dropdown.open .dropdown-menu {
+      display: block;
+    }
+    .dropdown-menu input[type="text"] {
+      margin-bottom: 10px;
+    }
+    .dropdown-list {
+      max-height: 220px;
+      overflow: auto;
+      display: grid;
+      gap: 8px;
+      padding-right: 4px;
+    }
+    .dropdown-list .check {
+      justify-content: space-between;
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.02);
+    }
+    .dropdown-list .check span:last-child {
+      color: var(--text);
+      flex: 1;
+    }
+    .dropdown-empty {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 8px 2px 2px;
+    }
+    .log-send { color: var(--accent); }
+    .log-receive { color: var(--accent-2); }
+    .log-info { color: var(--muted); }
+    .log-error { color: var(--danger); }
+    @media (max-width: 1100px) {
+      body { overflow: auto; }
+      .wrap { position: static; overflow: visible; }
+      .sidebar {
+        position: static;
+        width: auto;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .sidebar-scroll { height: auto; overflow: visible; padding-right: 0; }
+      .main {
+        position: static;
+        inset: auto;
+        height: auto;
+        overflow: visible;
+      }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="sidebar">
+      <div class="sidebar-scroll">
+      <h1>DIS Local Test Console</h1>
+      <div class="pill">Single Entity State PDU sender + optional UDP listener</div>
+
+      <div class="card">
+        <h2>DIS Target</h2>
+        <div class="grid">
+          <div>
+            <label for="connectionMode" title="How the UDP packet is addressed on the network. Broadcast sends to the whole subnet, multicast sends to a group, unicast sends to one host.">Mode</label>
+            <select id="connectionMode">
+              <option value="broadcast" selected>Broadcast</option>
+              <option value="multicast" disabled>Multicast (soon)</option>
+              <option value="unicast" disabled>Unicast (soon)</option>
+            </select>
+          </div>
+          <div>
+            <label for="targetPort" title="Destination UDP port used when sending DIS packets. Unreal receive socket should usually listen on the same port.">UDP Port</label>
+            <input id="targetPort" type="number" value="3000">
+          </div>
+          <div>
+            <label for="targetHost" title="Destination IP for outgoing DIS packets. For broadcast tests this is usually your subnet broadcast address, for example 192.168.1.255.">UDP Host</label>
+            <input id="targetHost" value="255.255.255.255">
+          </div>
+          <div>
+            <label for="multicastTtl" title="Multicast hop count. Only matters for multicast mode. It is ignored for broadcast tests.">Multicast TTL</label>
+            <input id="multicastTtl" type="number" value="1">
+          </div>
+          <div>
+            <label for="listenPort" title="Local UDP port this test tool listens on for incoming packets. Useful if you want to inspect traffic coming back from the simulator.">Listen Port</label>
+            <input id="listenPort" type="number" value="3001">
+          </div>
+          <div>
+            <label for="heartbeatDelayMs" title="How long to wait before re-sending the current state when nothing changes. This keeps the entity alive in receivers.">Heartbeat Delay (ms)</label>
+            <input id="heartbeatDelayMs" type="number" value="1000">
+          </div>
+          <div>
+            <label for="exerciseId" title="DIS exercise/session identifier. The receiver usually ignores packets from a different exercise.">Exercise ID</label>
+            <input id="exerciseId" type="number" value="1">
+          </div>
+          <div>
+            <label for="marking" title="Human-readable DIS entity label stored in the marking field. Max 11 ASCII characters.">Marking</label>
+            <input id="marking" value="Tester0" maxlength="11">
+          </div>
+          <div>
+            <label for="siteId" title="Part of the DIS Entity ID triplet. Usually identifies the site or installation.">Site ID</label>
+            <input id="siteId" type="number" value="1">
+          </div>
+          <div>
+            <label for="applicationId" title="Part of the DIS Entity ID triplet. Usually identifies the sending simulation/application.">Application ID</label>
+            <input id="applicationId" type="number" value="1">
+          </div>
+          <div>
+            <label for="entityId" title="Part of the DIS Entity ID triplet. Use a unique value per entity inside the same site/application pair.">Entity ID</label>
+            <div class="input-with-button">
+              <input id="entityId" type="number" value="1">
+              <button id="randomizeEntityIdBtn" class="mini-btn" type="button" title="Generate a random Entity ID so you can avoid colliding with an older spawned entity.">Rnd</button>
+            </div>
+          </div>
+          <div>
+            <label for="forceId" title="DIS force affiliation value. For example friendly, opposing, neutral or other depending on the receiver's interpretation.">Force ID</label>
+            <input id="forceId" type="number" value="1">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Entity Type</h2>
+        <div class="grid">
+          <div><label title="Top-level DIS entity grouping. For example platform, munition, life form, environmental object.">Entity Kind</label><input id="entityKind" type="number" value="1"></div>
+          <div><label title="DIS operating domain. Common values include land, air, surface, subsurface and space.">Domain</label><input id="domain" type="number" value="1"></div>
+          <div><label title="Country code used by DIS enumeration tables. Example: 225 for USA.">Country</label><input id="country" type="number" value="225"></div>
+          <div><label title="Category field within the selected kind/domain/country. Receivers often use this for actor class mapping.">Category</label><input id="category" type="number" value="1"></div>
+          <div><label title="Subcategory field within the DIS entity type tuple.">Subcategory</label><input id="subcategory" type="number" value="1"></div>
+          <div><label title="Specific field within the DIS entity type tuple.">Specific</label><input id="specific" type="number" value="3"></div>
+          <div><label title="Extra field within the DIS entity type tuple. Usually 0 unless your mapping expects a different value.">Extra</label><input id="extra" type="number" value="0"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Geo Start</h2>
+        <div class="grid">
+          <div><label title="Reference latitude used to convert local ENU movement into ECEF coordinates.">Origin Lat</label><input id="originLat" type="number" step="0.000001" value="41.015137"></div>
+          <div><label title="Reference longitude used to convert local ENU movement into ECEF coordinates.">Origin Lon</label><input id="originLon" type="number" step="0.000001" value="28.979530"></div>
+          <div><label title="Reference altitude in meters at the origin point.">Origin Alt (m)</label><input id="originAlt" type="number" step="0.1" value="30"></div>
+          <div><label title="Initial local up offset from the origin when the entity is reset or first created.">Start Up (m)</label><input id="startUp" type="number" step="0.1" value="50"></div>
+        </div>
+        <div class="grid" style="margin-top:10px">
+          <div><label title="Translation speed used by W/A/S/D movement in meters per second.">Move Speed (m/s)</label><input id="moveSpeed" type="number" step="1" value="25"></div>
+          <div><label title="Rotation speed used by Q/E, T/G and Z/C in degrees per second.">Turn Speed (deg/s)</label><input id="turnSpeed" type="number" step="1" value="70"></div>
+          <div><label title="Maximum send frequency while the entity is moving or changing state.">Send Rate (Hz)</label><input id="sendRate" type="number" step="1" value="15"></div>
+          <div><label title="Vertical translation speed used by R/F in meters per second.">Vertical Speed (m/s)</label><input id="verticalSpeed" type="number" step="1" value="15"></div>
+        </div>
+        <div class="button-row">
+          <button id="startBtn" class="secondary">Sending: OFF</button>
+          <button id="resetBtn" class="secondary">Reset Pose</button>
+        </div>
+        <div class="button-row">
+          <button id="toggleReceivingBtn" class="secondary" type="button">Receiving: ON</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Replay</h2>
+        <div class="grid">
+          <div style="grid-column: 1 / -1;">
+            <label for="replaySelect">Saved Replays</label>
+            <select id="replaySelect">
+              <option value="">No replays yet</option>
+            </select>
+          </div>
+        </div>
+        <div class="button-row three">
+          <button id="recordBtn" class="secondary" type="button">Start Rec</button>
+          <button id="replayBtn" class="secondary" type="button">Replay</button>
+          <button id="refreshReplaysBtn" class="secondary" type="button">Refresh</button>
+        </div>
+        <div class="help" style="margin-top:10px">
+          <label class="check" style="margin-bottom:8px;"><input id="replayLoop" type="checkbox"> loop replay</label>
+          <div><b>Status</b>: <span id="recordStatusText">idle</span></div>
+          <div style="margin-top:6px">Kayitlar `Tools/DISTestWeb/replays/*.replay` altina yazilir. Dosya adini degistirirsen liste otomatik yeni ismi gorur.</div>
+        </div>
+      </div>
+
+      <div class="card help">
+        <h2>Controls</h2>
+        <div><b>W/S</b> forward/back</div>
+        <div><b>A/D</b> strafe left/right</div>
+        <div><b>R/F</b> up/down</div>
+        <div><b>Q/E</b> yaw left/right</div>
+        <div><b>T/G</b> pitch up/down</div>
+        <div><b>Z/C</b> roll left/right</div>
+        <div style="margin-top:10px">Default host sunucudan tespit edilen broadcast IP oluyor. Varsayılan UDP port `3000`. Multicast seçeneği de var ama şimdilik default yine broadcast.</div>
+        <div style="margin-top:10px"><b>Same-machine test warning:</b> Eğer simulator/Unreal da bu makinede açıksa ve bu sayfayla yine aynı makineden test yapıyorsan, simulator tarafındaki receive socket ayarlarında <b>Allow Loopback</b> açık olmalı. Aksi halde plugin kendi makinesinden gelen broadcast paketlerini ignore eder.</div>
+      </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="card" style="padding:12px 14px; margin-bottom:0;">
+        <div class="entity-tabs-row">
+          <div class="entity-tabs" id="entityTabs"></div>
+          <div class="dropdown settings-dropdown" id="settingsDropdown">
+            <button id="settingsBtn" class="secondary" type="button">Settings</button>
+            <div class="dropdown-menu">
+              <div class="settings-grid">
+                <div>
+                  <label for="mapScale" title="Map draw scale in pixels per meter for the main viewport. Default 0.7 gives a lighter view.">Map Scale</label>
+                  <input id="mapScale" type="number" step="0.1" min="0.1" value="0.7">
+                </div>
+                <label class="check">
+                  <input id="showTrails" type="checkbox">
+                  Trail
+                </label>
+                <div>
+                  <label for="trailAlpha" title="Trail opacity between 0 and 1. Default 0.2. Values like .5 are accepted.">Trail Alpha</label>
+                  <input id="trailAlpha" type="number" step="0.1" min="0" max="1" value="0.2">
+                </div>
+                <button id="resetSettingsBtn" class="secondary" type="button">Reset To Defaults</button>
+              </div>
+            </div>
+          </div>
+          <button id="clearEntitiesBtn" class="secondary entity-clear-btn" type="button">Clear</button>
+        </div>
+      </div>
+      <div class="card map-card">
+        <canvas id="viewport" width="1200" height="800"></canvas>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><strong>Status</strong><span id="statusText">idle</span></div>
+        <div class="stat"><strong>Packets</strong><span id="packetCount" class="mono">0</span></div>
+        <div class="stat"><strong>ECEF X</strong><span id="ecefX" class="mono">0</span></div>
+        <div class="stat"><strong>ECEF Y / Z</strong><span id="ecefYZ" class="mono">0 / 0</span></div>
+        <div class="stat"><strong>East / North / Up</strong><span id="localPos" class="mono">0 / 0 / 0</span></div>
+        <div class="stat"><strong>Yaw / Pitch / Roll</strong><span id="angles" class="mono">0 / 0 / 0</span></div>
+        <div class="stat"><strong>Velocity</strong><span id="velocity" class="mono">0 / 0 / 0</span></div>
+        <div class="stat"><strong>Listener</strong><span id="listenerText">off</span></div>
+      </div>
+
+      <div class="card log-card">
+        <div>
+          <h2>Log</h2>
+          <div class="log-toolbar">
+            <label class="check"><input id="logSend" type="checkbox" checked> send</label>
+            <label class="check"><input id="logReceive" type="checkbox" checked> receive</label>
+            <label class="check"><input id="logInfo" type="checkbox" checked> info</label>
+            <label class="check"><input id="logError" type="checkbox" checked> error</label>
+            <button id="clearLogBtn" class="secondary" type="button">Clear View</button>
+            <div class="log-toolbar-spacer"></div>
+            <div class="dropdown" id="entityFilterDropdown">
+              <button id="entityFilterBtn" class="secondary" type="button">Entity</button>
+              <div class="dropdown-menu">
+                <input id="entityFilterSearch" type="text" placeholder="Search entities">
+                <div id="entityFilterList" class="dropdown-list"></div>
+              </div>
+            </div>
+            <div class="dropdown" id="pduFilterDropdown">
+              <button id="pduFilterBtn" class="secondary" type="button">Filter</button>
+              <div class="dropdown-menu">
+                <input id="pduFilterSearch" type="text" placeholder="Search PDU types">
+                <div id="pduFilterList" class="dropdown-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="logView" class="log-view"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const ENTITY_TYPE_STORAGE_KEY = "dis_test_web_entity_type_v1";
+    const FORM_STORAGE_KEY = "dis_test_web_form_v1";
+    const LOG_FILTER_STORAGE_KEY = "dis_test_web_log_filters_v1";
+    const REPLAY_STORAGE_KEY = "dis_test_web_replay_v1";
+    const ENTITIES_STORAGE_KEY = "dis_test_web_entities_v1";
+    const ALL_PDU_FILTERS = [
+      "Acknowledge",
+      "ActionRequest",
+      "ActionResponse",
+      "Collision",
+      "Comment",
+      "CreateEntity",
+      "Data",
+      "DataQuery",
+      "Designator",
+      "Detonation",
+      "ElectromagneticEmission",
+      "EntityState",
+      "EventReport",
+      "Fire",
+      "Receiver",
+      "RemoveEntity",
+      "RepairComplete",
+      "RepairResponse",
+      "ResupplyCancel",
+      "ResupplyOffer",
+      "ResupplyReceived",
+      "ServiceRequest",
+      "SetData",
+      "Signal",
+      "StartResume",
+      "StopFreeze",
+      "Transmitter",
+      "Replay",
+      "System",
+      "UDP"
+    ];
+    const DEFAULT_PDU_FILTERS = ["EntityState", "Replay", "System", "UDP"];
+    const PDU_FILTER_LABELS = {
+      Acknowledge: "Acknowledge PDU",
+      ActionRequest: "Action Request PDU",
+      ActionResponse: "Action Response PDU",
+      Collision: "Collision PDU",
+      Comment: "Comment PDU",
+      CreateEntity: "Create Entity PDU",
+      Data: "Data PDU",
+      DataQuery: "Data Query PDU",
+      Designator: "Designator PDU",
+      Detonation: "Detonation PDU",
+      ElectromagneticEmission: "Electromagnetic Emission PDU",
+      EntityState: "Entity State PDU",
+      EventReport: "Event Report PDU",
+      Fire: "Fire PDU",
+      Receiver: "Receiver PDU",
+      RemoveEntity: "Remove Entity PDU",
+      RepairComplete: "Repair Complete PDU",
+      RepairResponse: "Repair Response PDU",
+      ResupplyCancel: "Resupply Cancel PDU",
+      ResupplyOffer: "Resupply Offer PDU",
+      ResupplyReceived: "Resupply Received PDU",
+      ServiceRequest: "Service Request PDU",
+      SetData: "Set Data PDU",
+      Signal: "Signal PDU",
+      StartResume: "Start/Resume PDU",
+      StopFreeze: "Stop/Freeze PDU",
+      Transmitter: "Transmitter PDU",
+      Replay: "Replay",
+      System: "System",
+      UDP: "UDP"
+    };
+
+    const state = {
+      recording: false,
+      recordEntityId: null,
+      replayFiles: [],
+      selectedReplay: "",
+      keys: new Set(),
+      listenerPort: null,
+      logs: [],
+      receivedEntities: [],
+      receivedEntityTrails: new Map(),
+      expandedLogIds: new Set(),
+      hasLoadedCachedForm: false,
+      hasLoadedEntityTypeCache: false,
+      hasLoadedEntitiesCache: false,
+      hasAppliedServerDefaults: false,
+      serverDefaults: null,
+      pduFilterSearch: "",
+      selectedPduTypes: new Set(DEFAULT_PDU_FILTERS),
+      entityFilterSearch: "",
+      selectedEntityNames: new Set(),
+      knownEntityNames: new Set(),
+      preserveLogScrollTop: null,
+      replayLoop: false,
+      listenerSyncPromise: null,
+      receivingEnabled: true,
+      entities: [],
+      activeEntityId: null,
+      nextEntityId: 1
+    };
+
+    const canvas = document.getElementById("viewport");
+    const ctx = canvas.getContext("2d");
+
+    const controls = {
+      connectionMode: document.getElementById("connectionMode"),
+      targetHost: document.getElementById("targetHost"),
+      targetPort: document.getElementById("targetPort"),
+      multicastTtl: document.getElementById("multicastTtl"),
+      listenPort: document.getElementById("listenPort"),
+      heartbeatDelayMs: document.getElementById("heartbeatDelayMs"),
+      exerciseId: document.getElementById("exerciseId"),
+      siteId: document.getElementById("siteId"),
+      applicationId: document.getElementById("applicationId"),
+      entityId: document.getElementById("entityId"),
+      randomizeEntityIdBtn: document.getElementById("randomizeEntityIdBtn"),
+      forceId: document.getElementById("forceId"),
+      marking: document.getElementById("marking"),
+      entityKind: document.getElementById("entityKind"),
+      domain: document.getElementById("domain"),
+      country: document.getElementById("country"),
+      category: document.getElementById("category"),
+      subcategory: document.getElementById("subcategory"),
+      specific: document.getElementById("specific"),
+      extra: document.getElementById("extra"),
+      originLat: document.getElementById("originLat"),
+      originLon: document.getElementById("originLon"),
+      originAlt: document.getElementById("originAlt"),
+      startUp: document.getElementById("startUp"),
+      moveSpeed: document.getElementById("moveSpeed"),
+      turnSpeed: document.getElementById("turnSpeed"),
+      sendRate: document.getElementById("sendRate"),
+      verticalSpeed: document.getElementById("verticalSpeed"),
+      mapScale: document.getElementById("mapScale"),
+      showTrails: document.getElementById("showTrails"),
+      trailAlpha: document.getElementById("trailAlpha"),
+      resetSettingsBtn: document.getElementById("resetSettingsBtn"),
+      startBtn: document.getElementById("startBtn"),
+      resetBtn: document.getElementById("resetBtn"),
+      toggleReceivingBtn: document.getElementById("toggleReceivingBtn"),
+      recordBtn: document.getElementById("recordBtn"),
+      replayBtn: document.getElementById("replayBtn"),
+      refreshReplaysBtn: document.getElementById("refreshReplaysBtn"),
+      replayLoop: document.getElementById("replayLoop"),
+      replaySelect: document.getElementById("replaySelect"),
+      logSend: document.getElementById("logSend"),
+      logReceive: document.getElementById("logReceive"),
+      logInfo: document.getElementById("logInfo"),
+      logError: document.getElementById("logError"),
+      clearLogBtn: document.getElementById("clearLogBtn"),
+      clearEntitiesBtn: document.getElementById("clearEntitiesBtn"),
+      settingsDropdown: document.getElementById("settingsDropdown"),
+      settingsBtn: document.getElementById("settingsBtn"),
+      entityFilterDropdown: document.getElementById("entityFilterDropdown"),
+      entityFilterBtn: document.getElementById("entityFilterBtn"),
+      entityFilterSearch: document.getElementById("entityFilterSearch"),
+      entityFilterList: document.getElementById("entityFilterList"),
+      pduFilterDropdown: document.getElementById("pduFilterDropdown"),
+      pduFilterBtn: document.getElementById("pduFilterBtn"),
+      pduFilterSearch: document.getElementById("pduFilterSearch"),
+      pduFilterList: document.getElementById("pduFilterList"),
+      entityTabs: document.getElementById("entityTabs")
+    };
+
+    const ui = {
+      statusText: document.getElementById("statusText"),
+      packetCount: document.getElementById("packetCount"),
+      ecefX: document.getElementById("ecefX"),
+      ecefYZ: document.getElementById("ecefYZ"),
+      localPos: document.getElementById("localPos"),
+      angles: document.getElementById("angles"),
+      velocity: document.getElementById("velocity"),
+      listenerText: document.getElementById("listenerText"),
+      recordStatusText: document.getElementById("recordStatusText"),
+      logView: document.getElementById("logView")
+    };
+
+    function degToRad(value) {
+      return value * Math.PI / 180;
+    }
+
+    function geodeticToEcef(latDeg, lonDeg, altMeters) {
+      const a = 6378137.0;
+      const b = 6356752.3142;
+      const lat = degToRad(latDeg);
+      const lon = degToRad(lonDeg);
+      const a2 = a * a;
+      const b2 = b * b;
+      const e2 = 1 - (b2 / a2);
+      const n = a / Math.sqrt(1 - e2 * Math.sin(lat) * Math.sin(lat));
+      return {
+        x: (n + altMeters) * Math.cos(lat) * Math.cos(lon),
+        y: (n + altMeters) * Math.cos(lat) * Math.sin(lon),
+        z: ((b2 / a2) * n + altMeters) * Math.sin(lat)
+      };
+    }
+
+    function enuBasis(latDeg, lonDeg) {
+      const lat = degToRad(latDeg);
+      const lon = degToRad(lonDeg);
+      return {
+        east: [-Math.sin(lon), Math.cos(lon), 0],
+        north: [
+          -Math.sin(lat) * Math.cos(lon),
+          -Math.sin(lat) * Math.sin(lon),
+          Math.cos(lat)
+        ],
+        up: [
+          Math.cos(lat) * Math.cos(lon),
+          Math.cos(lat) * Math.sin(lon),
+          Math.sin(lat)
+        ]
+      };
+    }
+
+    function localToEcef(origin, basis, eastMeters, northMeters, upMeters) {
+      return {
+        x: origin.x + basis.east[0] * eastMeters + basis.north[0] * northMeters + basis.up[0] * upMeters,
+        y: origin.y + basis.east[1] * eastMeters + basis.north[1] * northMeters + basis.up[1] * upMeters,
+        z: origin.z + basis.east[2] * eastMeters + basis.north[2] * northMeters + basis.up[2] * upMeters
+      };
+    }
+
+    function ecefToLocal(origin, basis, ecef) {
+      const dx = ecef.x - origin.x;
+      const dy = ecef.y - origin.y;
+      const dz = ecef.z - origin.z;
+      return {
+        east: dx * basis.east[0] + dy * basis.east[1] + dz * basis.east[2],
+        north: dx * basis.north[0] + dy * basis.north[1] + dz * basis.north[2],
+        up: dx * basis.up[0] + dy * basis.up[1] + dz * basis.up[2]
+      };
+    }
+
+    function readConfig() {
+      syncActiveEntityFromControls();
+      const activeEntity = getActiveEntity();
+      if (!activeEntity) {
+        return null;
+      }
+      return structuredClone(activeEntity.config);
+    }
+
+    function buildEntitySnapshotFromControls(entityId, tabName = null) {
+      return {
+        id: entityId,
+        tabName,
+        running: false,
+        replaying: false,
+        replayTimers: [],
+        packetCount: 0,
+        localEast: 0,
+        localNorth: 0,
+        localUp: Number(controls.startUp.value),
+        yawDeg: 0,
+        pitchDeg: 0,
+        rollDeg: 0,
+        velocityEast: 0,
+        velocityNorth: 0,
+        velocityUp: 0,
+        angularVelocityX: 0,
+        angularVelocityY: 0,
+        angularVelocityZ: 0,
+        sendInFlight: false,
+        lastSendAt: 0,
+        lastHeartbeatAt: 0,
+        lastSentStateHash: "",
+        trailPoints: [],
+        config: {
+          mode: controls.connectionMode.value,
+          targetHost: controls.targetHost.value.trim(),
+          targetPort: Number(controls.targetPort.value),
+          multicastTtl: Number(controls.multicastTtl.value),
+          listenPort: Number(controls.listenPort.value),
+          heartbeatDelayMs: Number(controls.heartbeatDelayMs.value),
+          exerciseId: Number(controls.exerciseId.value),
+          siteId: Number(controls.siteId.value),
+          applicationId: Number(controls.applicationId.value),
+          entityId: Number(controls.entityId.value),
+          forceId: Number(controls.forceId.value),
+          marking: controls.marking.value.trim(),
+          entityType: {
+            entityKind: Number(controls.entityKind.value),
+            domain: Number(controls.domain.value),
+            country: Number(controls.country.value),
+            category: Number(controls.category.value),
+            subcategory: Number(controls.subcategory.value),
+            specific: Number(controls.specific.value),
+            extra: Number(controls.extra.value)
+          },
+          originLat: Number(controls.originLat.value),
+          originLon: Number(controls.originLon.value),
+          originAlt: Number(controls.originAlt.value),
+          moveSpeed: Number(controls.moveSpeed.value),
+          turnSpeed: Number(controls.turnSpeed.value),
+          sendRate: Math.max(1, Number(controls.sendRate.value)),
+          verticalSpeed: Number(controls.verticalSpeed.value),
+          mapScale: Math.max(0.1, Number(controls.mapScale.value) || 0.7),
+          startUp: Number(controls.startUp.value)
+        },
+        selectedReplay: ""
+      };
+    }
+
+    function initializeEntityRuntimeState(entity) {
+      if (!entity) {
+        return entity;
+      }
+
+      entity.trailPoints = Array.isArray(entity.trailPoints) ? entity.trailPoints : [];
+      entity.replaying = Boolean(entity.replaying);
+      entity.replayTimers = Array.isArray(entity.replayTimers) ? entity.replayTimers : [];
+      entity.sendInFlight = Boolean(entity.sendInFlight);
+      return entity;
+    }
+
+    function clearEntityTrail(entity) {
+      if (!entity) {
+        return;
+      }
+      entity.trailPoints = [];
+    }
+
+    function getTrailAlpha() {
+      const parsed = Number(controls.trailAlpha.value);
+      if (!Number.isFinite(parsed)) {
+        return 0.2;
+      }
+      return Math.min(1, Math.max(0, parsed));
+    }
+
+    function appendLogEntry(entry) {
+      state.logs.push(entry);
+      if (state.logs.length > 500) {
+        state.logs.splice(0, state.logs.length - 500);
+      }
+    }
+
+    function applyViewportScale(nextScale) {
+      const clampedScale = Math.min(20, Math.max(0.1, Number(nextScale) || 0.7));
+      const roundedScale = Math.round(clampedScale * 100) / 100;
+      controls.mapScale.value = roundedScale.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+      syncActiveEntityFromControls();
+      saveCachedForm();
+      saveEntitiesCache();
+    }
+
+    function updateSettingsUi() {
+      controls.trailAlpha.disabled = !controls.showTrails.checked;
+      controls.trailAlpha.parentElement.style.display = controls.showTrails.checked ? "" : "none";
+    }
+
+    function updateEntityTrail(entity) {
+      if (!entity) {
+        return;
+      }
+
+      const trailPoints = Array.isArray(entity.trailPoints) ? entity.trailPoints : [];
+      const nextPoint = {
+        east: Number(entity.localEast || 0),
+        north: Number(entity.localNorth || 0)
+      };
+      const lastPoint = trailPoints[trailPoints.length - 1] || null;
+      const minPointSpacingMeters = 4;
+
+      if (lastPoint) {
+        const deltaEast = nextPoint.east - lastPoint.east;
+        const deltaNorth = nextPoint.north - lastPoint.north;
+        const distanceSquared = (deltaEast * deltaEast) + (deltaNorth * deltaNorth);
+        if (distanceSquared < (minPointSpacingMeters * minPointSpacingMeters)) {
+          return;
+        }
+      }
+
+      trailPoints.push(nextPoint);
+      if (trailPoints.length > 2000) {
+        trailPoints.splice(0, trailPoints.length - 2000);
+      }
+      entity.trailPoints = trailPoints;
+    }
+
+    function getReceivedEntityKey(entity) {
+      return `${entity?.siteId || 0}:${entity?.applicationId || 0}:${entity?.entityId || 0}`;
+    }
+
+    function getLocalEntityNetworkKey(entity) {
+      return `${entity?.config?.siteId || 0}:${entity?.config?.applicationId || 0}:${entity?.config?.entityId || 0}`;
+    }
+
+    function removeEntityTrailState(entity) {
+      if (!entity) {
+        return;
+      }
+
+      clearEntityTrail(entity);
+
+      const entityKey = getLocalEntityNetworkKey(entity);
+      state.receivedEntityTrails.delete(entityKey);
+      state.receivedEntities = state.receivedEntities.filter((receivedEntity) => getReceivedEntityKey(receivedEntity) !== entityKey);
+    }
+
+    function removeReceivedEntityTrailState(entityKey) {
+      state.receivedEntityTrails.delete(entityKey);
+      state.receivedEntities = state.receivedEntities.filter((receivedEntity) => getReceivedEntityKey(receivedEntity) !== entityKey);
+    }
+
+    function updateReceivedEntityTrails(receivedEntities) {
+      const nextKeys = new Set();
+
+      for (const entity of receivedEntities) {
+        if (!entity?.ecef) {
+          continue;
+        }
+
+        const entityKey = getReceivedEntityKey(entity);
+        nextKeys.add(entityKey);
+
+        const trailPoints = state.receivedEntityTrails.get(entityKey) || [];
+        const nextPoint = {
+          ecef: {
+            x: Number(entity.ecef.x || 0),
+            y: Number(entity.ecef.y || 0),
+            z: Number(entity.ecef.z || 0)
+          }
+        };
+        const lastPoint = trailPoints[trailPoints.length - 1] || null;
+        const minPointSpacingMeters = 4;
+
+        if (lastPoint?.ecef) {
+          const dx = nextPoint.ecef.x - lastPoint.ecef.x;
+          const dy = nextPoint.ecef.y - lastPoint.ecef.y;
+          const dz = nextPoint.ecef.z - lastPoint.ecef.z;
+          const distanceSquared = (dx * dx) + (dy * dy) + (dz * dz);
+          if (distanceSquared < (minPointSpacingMeters * minPointSpacingMeters)) {
+            continue;
+          }
+        }
+
+        trailPoints.push(nextPoint);
+        if (trailPoints.length > 2000) {
+          trailPoints.splice(0, trailPoints.length - 2000);
+        }
+        state.receivedEntityTrails.set(entityKey, trailPoints);
+      }
+
+      for (const entityKey of Array.from(state.receivedEntityTrails.keys())) {
+        if (!nextKeys.has(entityKey)) {
+          removeReceivedEntityTrailState(entityKey);
+        }
+      }
+    }
+
+    function clearReceivedEntityTrails() {
+      state.receivedEntityTrails.clear();
+      state.receivedEntities = [];
+    }
+
+    function drawReceivedEntityTrail(entityKey, referenceOrigin, referenceBasis, activeEntity, scale, color) {
+      const points = state.receivedEntityTrails.get(entityKey) || [];
+      if (points.length < 2 || !referenceOrigin || !referenceBasis || !activeEntity) {
+        return;
+      }
+
+      ctx.save();
+      ctx.beginPath();
+
+      let hasVisiblePoint = false;
+      for (const point of points) {
+        if (!point?.ecef) {
+          continue;
+        }
+
+        const local = ecefToLocal(referenceOrigin, referenceBasis, point.ecef);
+        const drawX = (local.east - (activeEntity.localEast || 0)) * scale;
+        const drawY = -(local.north - (activeEntity.localNorth || 0)) * scale;
+
+        if (!hasVisiblePoint) {
+          ctx.moveTo(drawX, drawY);
+          hasVisiblePoint = true;
+        } else {
+          ctx.lineTo(drawX, drawY);
+        }
+      }
+
+      if (hasVisiblePoint) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawEntityTrail(entity, referenceOrigin, referenceBasis, activeEntity, scale, color) {
+      if (!entity || !referenceOrigin || !referenceBasis || !activeEntity) {
+        return;
+      }
+
+      const points = Array.isArray(entity.trailPoints) ? entity.trailPoints : [];
+      if (points.length < 2) {
+        return;
+      }
+
+      const config = entity.config;
+      const entityOrigin = geodeticToEcef(config.originLat, config.originLon, config.originAlt);
+      const entityBasis = enuBasis(config.originLat, config.originLon);
+
+      ctx.save();
+      ctx.beginPath();
+
+      let hasVisiblePoint = false;
+      for (const point of points) {
+        const pointEcef = localToEcef(entityOrigin, entityBasis, point.east, point.north, Number(entity.localUp || 0));
+        const local = ecefToLocal(referenceOrigin, referenceBasis, pointEcef);
+        const drawX = (local.east - (activeEntity.localEast || 0)) * scale;
+        const drawY = -(local.north - (activeEntity.localNorth || 0)) * scale;
+
+        if (!hasVisiblePoint) {
+          ctx.moveTo(drawX, drawY);
+          hasVisiblePoint = true;
+        } else {
+          ctx.lineTo(drawX, drawY);
+        }
+      }
+
+      if (hasVisiblePoint) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawEntityMarker(drawX, drawY, yawDeg, fillColor, markerScale = 1) {
+      ctx.save();
+      ctx.translate(drawX, drawY);
+      ctx.rotate(degToRad(yawDeg || 0));
+      ctx.fillStyle = fillColor;
+      ctx.strokeStyle = "rgba(255,255,255,0.85)";
+      ctx.lineWidth = markerScale >= 1 ? 2 : 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -20 * markerScale);
+      ctx.lineTo(14 * markerScale, 18 * markerScale);
+      ctx.lineTo(0, 10 * markerScale);
+      ctx.lineTo(-14 * markerScale, 18 * markerScale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function getEntityDisplayName(entity, index = 0) {
+      const marking = entity?.config?.marking?.trim();
+      return marking || entity.tabName || `Entity ${index + 1}`;
+    }
+
+    function makeUniqueEntityLabel(baseLabel, excludeEntityId = null) {
+      const normalizedBase = String(baseLabel || "Entity").trim() || "Entity";
+      const existingNames = new Set(
+        state.entities
+          .filter((entity) => entity.id !== excludeEntityId)
+          .map((entity, index) => getEntityDisplayName(entity, index))
+      );
+
+      const fitLabel = (label, suffix = "") => {
+        const maxLength = 11;
+        const usable = Math.max(1, maxLength - suffix.length);
+        return `${label.slice(0, usable)}${suffix}`;
+      };
+
+      const baseCandidate = fitLabel(normalizedBase);
+      if (!existingNames.has(baseCandidate)) {
+        return baseCandidate;
+      }
+
+      let counter = 1;
+      while (true) {
+        const suffix = `_${counter}`;
+        const candidate = fitLabel(normalizedBase, suffix);
+        if (!existingNames.has(candidate)) {
+          return candidate;
+        }
+        counter += 1;
+      }
+    }
+
+    function getActiveEntity() {
+      return state.entities.find((entity) => entity.id === state.activeEntityId) || null;
+    }
+
+    function getReplayEntity() {
+      return state.entities.find((entity) => entity.replaying) || null;
+    }
+
+    function isEntityReplaying(entity) {
+      return Boolean(entity?.replaying);
+    }
+
+    function isEntityRecording(entity) {
+      return Boolean(entity) && state.recording && state.recordEntityId === entity.id;
+    }
+
+    function syncActiveEntityFromControls() {
+      const activeEntity = getActiveEntity();
+      if (!activeEntity) {
+        return;
+      }
+
+      activeEntity.config = {
+        mode: controls.connectionMode.value,
+        targetHost: controls.targetHost.value.trim(),
+        targetPort: Number(controls.targetPort.value),
+        multicastTtl: Number(controls.multicastTtl.value),
+        listenPort: Number(controls.listenPort.value),
+        heartbeatDelayMs: Number(controls.heartbeatDelayMs.value),
+        exerciseId: Number(controls.exerciseId.value),
+        siteId: Number(controls.siteId.value),
+        applicationId: Number(controls.applicationId.value),
+        entityId: Number(controls.entityId.value),
+        forceId: Number(controls.forceId.value),
+        marking: controls.marking.value.trim(),
+        entityType: {
+          entityKind: Number(controls.entityKind.value),
+          domain: Number(controls.domain.value),
+          country: Number(controls.country.value),
+          category: Number(controls.category.value),
+          subcategory: Number(controls.subcategory.value),
+          specific: Number(controls.specific.value),
+          extra: Number(controls.extra.value)
+        },
+        originLat: Number(controls.originLat.value),
+        originLon: Number(controls.originLon.value),
+        originAlt: Number(controls.originAlt.value),
+        moveSpeed: Number(controls.moveSpeed.value),
+        turnSpeed: Number(controls.turnSpeed.value),
+        sendRate: Math.max(1, Number(controls.sendRate.value)),
+        verticalSpeed: Number(controls.verticalSpeed.value),
+        mapScale: Math.max(0.1, Number(controls.mapScale.value) || 0.7),
+        startUp: Number(controls.startUp.value)
+      };
+    }
+
+    function applyEntityToControls(entity) {
+      if (!entity) {
+        return;
+      }
+
+      const config = entity.config;
+      controls.connectionMode.value = config.mode;
+      controls.targetHost.value = config.targetHost;
+      controls.targetPort.value = config.targetPort;
+      controls.multicastTtl.value = config.multicastTtl;
+      controls.listenPort.value = config.listenPort;
+      controls.heartbeatDelayMs.value = config.heartbeatDelayMs;
+      controls.exerciseId.value = config.exerciseId;
+      controls.siteId.value = config.siteId;
+      controls.applicationId.value = config.applicationId;
+      controls.entityId.value = config.entityId;
+      controls.forceId.value = config.forceId;
+      controls.marking.value = config.marking;
+      controls.entityKind.value = config.entityType.entityKind;
+      controls.domain.value = config.entityType.domain;
+      controls.country.value = config.entityType.country;
+      controls.category.value = config.entityType.category;
+      controls.subcategory.value = config.entityType.subcategory;
+      controls.specific.value = config.entityType.specific;
+      controls.extra.value = config.entityType.extra;
+      controls.originLat.value = config.originLat;
+      controls.originLon.value = config.originLon;
+      controls.originAlt.value = config.originAlt;
+      controls.startUp.value = config.startUp;
+      controls.moveSpeed.value = config.moveSpeed;
+      controls.turnSpeed.value = config.turnSpeed;
+      controls.sendRate.value = config.sendRate;
+      controls.verticalSpeed.value = config.verticalSpeed;
+      controls.mapScale.value = config.mapScale ?? 0.7;
+    }
+
+    function saveEntitiesCache() {
+      localStorage.setItem(ENTITIES_STORAGE_KEY, JSON.stringify({
+        nextEntityId: state.nextEntityId,
+        activeEntityId: state.activeEntityId,
+        entities: state.entities.map((entity) => ({
+          ...entity,
+          replaying: Boolean(entity.replaying),
+          replayTimers: [],
+          trailPoints: []
+        }))
+      }));
+    }
+
+    function loadEntitiesCache() {
+      try {
+        const raw = localStorage.getItem(ENTITIES_STORAGE_KEY);
+        if (!raw) {
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.entities) && parsed.entities.length) {
+          state.entities = parsed.entities;
+          state.nextEntityId = Math.max(Number(parsed.nextEntityId || (parsed.entities.length + 1)), 1);
+          state.activeEntityId = parsed.activeEntityId ?? parsed.entities[0].id;
+          state.hasLoadedEntitiesCache = true;
+        }
+      } catch (error) {
+      }
+    }
+
+    function renderEntityTabs() {
+      const tabsHtml = state.entities.map((entity, index) => `
+        <button class="entity-tab ${entity.id === state.activeEntityId ? "active" : ""} ${(entity.running || entity.replaying) ? "is-running" : ""}" type="button" data-entity-tab-id="${entity.id}">
+          <span class="entity-tab-running"></span>
+          <span class="entity-tab-label">${getEntityDisplayName(entity, index)}</span>
+          <span class="entity-tab-close" data-entity-close-id="${entity.id}">x</span>
+        </button>
+      `).join("");
+
+      controls.entityTabs.innerHTML = `${tabsHtml}<button class="secondary entity-add-btn" type="button" id="addEntityTabBtn">+ Entity</button>`;
+    }
+
+    function createNewEntityFromCurrentControls(label = null) {
+      syncActiveEntityFromControls();
+      const newEntity = buildEntitySnapshotFromControls(state.nextEntityId++, label || `Entity ${state.entities.length + 1}`);
+      newEntity.config.entityId = Math.floor(Math.random() * 65535) + 1;
+      const uniqueLabel = makeUniqueEntityLabel(newEntity.config.marking || label || `Entity ${state.entities.length + 1}`);
+      newEntity.config.marking = uniqueLabel;
+      newEntity.tabName = uniqueLabel;
+      newEntity.localUp = Number(newEntity.config.startUp || 0);
+      return newEntity;
+    }
+
+    async function clearAllEntities() {
+      syncActiveEntityFromControls();
+
+      if (state.recording) {
+        try {
+          const response = await fetch("/api/replays/record/stop", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+          });
+          const result = await response.json();
+          if (response.ok && result.ok) {
+            state.recording = false;
+            state.recordEntityId = null;
+            state.replayFiles = result.replayFiles || [];
+            state.selectedReplay = result.fileName || state.selectedReplay;
+          }
+        } catch (error) {
+        }
+      }
+
+      const entitiesToClear = [...state.entities];
+      for (const entity of entitiesToClear) {
+        removeEntityTrailState(entity);
+        if (entity.replaying) {
+          try {
+            await stopReplayPlayback(entity.id);
+          } catch (error) {
+          }
+        }
+        if (entity.running) {
+          await stopSendingEntity(entity);
+        }
+      }
+
+      const replacementEntity = createNewEntityFromCurrentControls("Entity 1");
+      state.entities = [replacementEntity];
+      state.activeEntityId = replacementEntity.id;
+      try {
+        await fetch("/api/logs/clear", { method: "POST" });
+      } catch (error) {
+      }
+      state.logs = [];
+      clearReceivedEntityTrails();
+      applyEntityToControls(replacementEntity);
+      renderEntityTabs();
+      renderStartButton();
+      renderReplayControls();
+      renderLogs();
+      saveEntitiesCache();
+    }
+
+    function loadCachedForm() {
+      try {
+        const raw = localStorage.getItem(FORM_STORAGE_KEY);
+        if (!raw) {
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        const fields = {
+          connectionMode: controls.connectionMode,
+          targetHost: controls.targetHost,
+          targetPort: controls.targetPort,
+          multicastTtl: controls.multicastTtl,
+          listenPort: controls.listenPort,
+          heartbeatDelayMs: controls.heartbeatDelayMs,
+          exerciseId: controls.exerciseId,
+          siteId: controls.siteId,
+          applicationId: controls.applicationId,
+          entityId: controls.entityId,
+          forceId: controls.forceId,
+          marking: controls.marking,
+          originLat: controls.originLat,
+          originLon: controls.originLon,
+          originAlt: controls.originAlt,
+          startUp: controls.startUp,
+          moveSpeed: controls.moveSpeed,
+          turnSpeed: controls.turnSpeed,
+          sendRate: controls.sendRate,
+          verticalSpeed: controls.verticalSpeed,
+          mapScale: controls.mapScale,
+          showTrails: controls.showTrails,
+          trailAlpha: controls.trailAlpha
+        };
+
+        for (const [key, input] of Object.entries(fields)) {
+          if (parsed[key] !== undefined && input) {
+            if (input.type === "checkbox") {
+              input.checked = Boolean(parsed[key]);
+            } else {
+              input.value = parsed[key];
+            }
+          }
+        }
+
+        updateSettingsUi();
+        state.hasLoadedCachedForm = true;
+      } catch (error) {
+      }
+    }
+
+    function saveCachedForm() {
+      const payload = {
+        connectionMode: controls.connectionMode.value,
+        targetHost: controls.targetHost.value,
+        targetPort: controls.targetPort.value,
+        multicastTtl: controls.multicastTtl.value,
+        listenPort: controls.listenPort.value,
+        heartbeatDelayMs: controls.heartbeatDelayMs.value,
+        exerciseId: controls.exerciseId.value,
+        siteId: controls.siteId.value,
+        applicationId: controls.applicationId.value,
+        entityId: controls.entityId.value,
+        forceId: controls.forceId.value,
+        marking: controls.marking.value,
+        originLat: controls.originLat.value,
+        originLon: controls.originLon.value,
+        originAlt: controls.originAlt.value,
+        startUp: controls.startUp.value,
+        moveSpeed: controls.moveSpeed.value,
+        turnSpeed: controls.turnSpeed.value,
+        sendRate: controls.sendRate.value,
+        verticalSpeed: controls.verticalSpeed.value,
+        mapScale: controls.mapScale.value,
+        showTrails: controls.showTrails.checked,
+        trailAlpha: controls.trailAlpha.value
+      };
+
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function randomizeEntityId() {
+      const activeEntity = getActiveEntity();
+      const randomId = Math.floor(Math.random() * 65535) + 1;
+      controls.entityId.value = String(randomId);
+      if (activeEntity) {
+        activeEntity.config.entityId = randomId;
+      }
+      saveEntitiesCache();
+      saveCachedForm();
+    }
+
+    function loadEntityTypeCache() {
+      try {
+        const raw = localStorage.getItem(ENTITY_TYPE_STORAGE_KEY);
+        if (!raw) {
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        const map = {
+          entityKind: controls.entityKind,
+          domain: controls.domain,
+          country: controls.country,
+          category: controls.category,
+          subcategory: controls.subcategory,
+          specific: controls.specific,
+          extra: controls.extra
+        };
+
+        for (const [key, input] of Object.entries(map)) {
+          if (parsed[key] !== undefined) {
+            input.value = parsed[key];
+          }
+        }
+        state.hasLoadedEntityTypeCache = true;
+      } catch (error) {
+      }
+    }
+
+    function saveEntityTypeCache() {
+      const payload = {
+        entityKind: controls.entityKind.value,
+        domain: controls.domain.value,
+        country: controls.country.value,
+        category: controls.category.value,
+        subcategory: controls.subcategory.value,
+        specific: controls.specific.value,
+        extra: controls.extra.value
+      };
+      localStorage.setItem(ENTITY_TYPE_STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function applyServerDefaults(defaults) {
+      if (state.hasAppliedServerDefaults || !defaults) {
+        return;
+      }
+
+      state.serverDefaults = defaults;
+
+      const formFields = {
+        connectionMode: controls.connectionMode,
+        targetHost: controls.targetHost,
+        targetPort: controls.targetPort,
+        multicastTtl: controls.multicastTtl,
+        listenPort: controls.listenPort,
+        heartbeatDelayMs: controls.heartbeatDelayMs,
+        exerciseId: controls.exerciseId,
+        siteId: controls.siteId,
+        applicationId: controls.applicationId,
+        entityId: controls.entityId,
+        forceId: controls.forceId,
+        marking: controls.marking,
+        originLat: controls.originLat,
+        originLon: controls.originLon,
+        originAlt: controls.originAlt,
+        startUp: controls.startUp,
+        moveSpeed: controls.moveSpeed,
+        turnSpeed: controls.turnSpeed,
+        sendRate: controls.sendRate,
+        verticalSpeed: controls.verticalSpeed,
+        mapScale: controls.mapScale,
+        showTrails: controls.showTrails,
+        trailAlpha: controls.trailAlpha
+      };
+
+      if (!state.hasLoadedCachedForm) {
+        for (const [key, input] of Object.entries(formFields)) {
+          if (defaults[key] !== undefined && input) {
+            if (input.type === "checkbox") {
+              input.checked = Boolean(defaults[key]);
+            } else {
+              input.value = defaults[key];
+            }
+          }
+        }
+      }
+
+      updateSettingsUi();
+
+      if (!state.hasLoadedEntityTypeCache && defaults.entityType) {
+        const entityTypeFields = {
+          entityKind: controls.entityKind,
+          domain: controls.domain,
+          country: controls.country,
+          category: controls.category,
+          subcategory: controls.subcategory,
+          specific: controls.specific,
+          extra: controls.extra
+        };
+
+        for (const [key, input] of Object.entries(entityTypeFields)) {
+          if (defaults.entityType[key] !== undefined && input) {
+            input.value = defaults.entityType[key];
+          }
+        }
+      }
+
+      state.hasAppliedServerDefaults = true;
+      if (!state.hasLoadedCachedForm) {
+        const activeEntity = getActiveEntity();
+        if (activeEntity) {
+          resetEntityPose(activeEntity);
+        }
+      }
+      if (!state.hasLoadedEntitiesCache) {
+        const activeEntity = getActiveEntity();
+        if (activeEntity) {
+          syncActiveEntityFromControls();
+          activeEntity.localUp = Number(activeEntity.config.startUp || 0);
+          saveEntitiesCache();
+          renderEntityTabs();
+          renderStartButton();
+        }
+      }
+    }
+
+    function loadLogFilterCache() {
+      try {
+        const raw = localStorage.getItem(LOG_FILTER_STORAGE_KEY);
+        if (!raw) {
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        if (parsed.logSend !== undefined) controls.logSend.checked = Boolean(parsed.logSend);
+        if (parsed.logReceive !== undefined) controls.logReceive.checked = Boolean(parsed.logReceive);
+        if (parsed.logInfo !== undefined) controls.logInfo.checked = Boolean(parsed.logInfo);
+        if (parsed.logError !== undefined) controls.logError.checked = Boolean(parsed.logError);
+        if (Array.isArray(parsed.selectedPduTypes) && parsed.selectedPduTypes.length) {
+          state.selectedPduTypes = new Set(parsed.selectedPduTypes.map((value) => String(value)));
+        }
+      } catch (error) {
+      }
+    }
+
+    function saveLogFilterCache() {
+      const payload = {
+        logSend: controls.logSend.checked,
+        logReceive: controls.logReceive.checked,
+        logInfo: controls.logInfo.checked,
+        logError: controls.logError.checked,
+        selectedPduTypes: Array.from(state.selectedPduTypes)
+      };
+      localStorage.setItem(LOG_FILTER_STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function getEntryPduType(entry) {
+      return String(entry?.extra?.pduType || "System");
+    }
+
+    function getEntryEntityName(entry) {
+      return String(entry?.extra?.summary?.marking || entry?.extra?.entityName || "").trim();
+    }
+
+    function renderPduFilterDropdown() {
+      const discoveredTypes = Array.from(new Set([
+        ...ALL_PDU_FILTERS,
+        ...state.logs.map((entry) => getEntryPduType(entry))
+      ])).sort((a, b) => {
+        const aIsNonPdu = ["System", "Replay", "UDP"].includes(a);
+        const bIsNonPdu = ["System", "Replay", "UDP"].includes(b);
+        if (aIsNonPdu !== bIsNonPdu) {
+          return aIsNonPdu ? -1 : 1;
+        }
+        return (PDU_FILTER_LABELS[a] || a).localeCompare(PDU_FILTER_LABELS[b] || b, undefined, { sensitivity: "base" });
+      });
+
+      if (!state.selectedPduTypes.size) {
+        state.selectedPduTypes = new Set(DEFAULT_PDU_FILTERS);
+      }
+
+      const search = state.pduFilterSearch.trim().toLowerCase();
+      const visibleTypes = discoveredTypes.filter((type) => type.toLowerCase().includes(search));
+
+      controls.pduFilterList.innerHTML = visibleTypes.length
+        ? visibleTypes.map((type) => `
+            <label class="check">
+              <input type="checkbox" data-pdu-type="${type}" ${state.selectedPduTypes.has(type) ? "checked" : ""}>
+              <span>${PDU_FILTER_LABELS[type] || type}</span>
+            </label>
+          `).join("")
+        : `<div class="dropdown-empty">No matching PDU types.</div>`;
+    }
+
+    function renderEntityFilterDropdown() {
+      const discoveredNames = Array.from(new Set([
+        ...state.entities.map((entity, index) => getEntityDisplayName(entity, index)),
+        ...state.logs.map((entry) => getEntryEntityName(entry)).filter(Boolean)
+      ])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+      discoveredNames.forEach((name) => {
+        if (!state.knownEntityNames.has(name)) {
+          state.knownEntityNames.add(name);
+          state.selectedEntityNames.add(name);
+        }
+      });
+
+      const search = state.entityFilterSearch.trim().toLowerCase();
+      const visibleNames = discoveredNames.filter((name) => name.toLowerCase().includes(search));
+
+      controls.entityFilterList.innerHTML = visibleNames.length
+        ? visibleNames.map((name) => `
+            <label class="check">
+              <input type="checkbox" data-entity-name="${name}" ${state.selectedEntityNames.has(name) ? "checked" : ""}>
+              <span>${name}</span>
+            </label>
+          `).join("")
+        : `<div class="dropdown-empty">No matching entities.</div>`;
+    }
+
+    function loadReplayCache() {
+      try {
+        const raw = localStorage.getItem(REPLAY_STORAGE_KEY);
+        if (!raw) {
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        if (typeof parsed.selectedReplay === "string") {
+          state.selectedReplay = parsed.selectedReplay;
+        }
+        if (parsed.replayLoop !== undefined) {
+          state.replayLoop = Boolean(parsed.replayLoop);
+          controls.replayLoop.checked = state.replayLoop;
+        }
+        if (Number.isFinite(Number(parsed.recordEntityId))) {
+          state.recordEntityId = Number(parsed.recordEntityId);
+        }
+      } catch (error) {
+      }
+    }
+
+    function saveReplayCache() {
+      localStorage.setItem(REPLAY_STORAGE_KEY, JSON.stringify({
+        selectedReplay: state.selectedReplay,
+        replayLoop: state.replayLoop,
+        recordEntityId: state.recordEntityId
+      }));
+    }
+
+    function resetSettingsToDefaults() {
+      const defaults = state.serverDefaults;
+      if (!defaults) {
+        return;
+      }
+
+      localStorage.removeItem(FORM_STORAGE_KEY);
+      localStorage.removeItem(ENTITY_TYPE_STORAGE_KEY);
+      localStorage.removeItem(LOG_FILTER_STORAGE_KEY);
+      localStorage.removeItem(REPLAY_STORAGE_KEY);
+      localStorage.removeItem(ENTITIES_STORAGE_KEY);
+
+      state.hasLoadedCachedForm = false;
+      state.hasLoadedEntityTypeCache = false;
+      state.hasLoadedEntitiesCache = false;
+      state.pduFilterSearch = "";
+      state.entityFilterSearch = "";
+      state.selectedPduTypes = new Set(DEFAULT_PDU_FILTERS);
+      state.selectedEntityNames = new Set();
+      state.knownEntityNames = new Set();
+      state.selectedReplay = "";
+      state.replayLoop = false;
+      state.recordEntityId = null;
+
+      controls.connectionMode.value = defaults.mode;
+      controls.targetHost.value = defaults.targetHost;
+      controls.targetPort.value = defaults.targetPort;
+      controls.multicastTtl.value = defaults.multicastTtl;
+      controls.listenPort.value = defaults.listenPort;
+      controls.heartbeatDelayMs.value = defaults.heartbeatDelayMs;
+      controls.exerciseId.value = defaults.exerciseId;
+      controls.siteId.value = defaults.siteId;
+      controls.applicationId.value = defaults.applicationId;
+      controls.entityId.value = defaults.entityId;
+      controls.forceId.value = defaults.forceId;
+      controls.marking.value = defaults.marking;
+      controls.originLat.value = defaults.originLat;
+      controls.originLon.value = defaults.originLon;
+      controls.originAlt.value = defaults.originAlt;
+      controls.startUp.value = defaults.startUp;
+      controls.moveSpeed.value = defaults.moveSpeed;
+      controls.turnSpeed.value = defaults.turnSpeed;
+      controls.sendRate.value = defaults.sendRate;
+      controls.verticalSpeed.value = defaults.verticalSpeed;
+      controls.entityKind.value = defaults.entityType.entityKind;
+      controls.domain.value = defaults.entityType.domain;
+      controls.country.value = defaults.entityType.country;
+      controls.category.value = defaults.entityType.category;
+      controls.subcategory.value = defaults.entityType.subcategory;
+      controls.specific.value = defaults.entityType.specific;
+      controls.extra.value = defaults.entityType.extra;
+      controls.mapScale.value = String(defaults.mapScale ?? 0.7);
+      controls.showTrails.checked = Boolean(defaults.showTrails ?? false);
+      controls.trailAlpha.value = String(defaults.trailAlpha ?? 0.2);
+      controls.replayLoop.checked = false;
+      controls.pduFilterSearch.value = "";
+      controls.entityFilterSearch.value = "";
+
+      updateSettingsUi();
+
+      const activeEntity = getActiveEntity();
+      if (activeEntity) {
+        syncActiveEntityFromControls();
+        resetEntityPose(activeEntity);
+      }
+
+      saveCachedForm();
+      saveEntityTypeCache();
+      saveReplayCache();
+      saveEntitiesCache();
+      renderPduFilterDropdown();
+      renderEntityFilterDropdown();
+      renderReplayControls();
+      renderEntityTabs();
+      renderStartButton();
+      renderLogs();
+      syncListenerToActiveEntity();
+    }
+
+    function clearEntityReplayTimers(entity) {
+      if (!entity?.replayTimers) {
+        return;
+      }
+      for (const timerId of entity.replayTimers) {
+        clearTimeout(timerId);
+      }
+      entity.replayTimers = [];
+    }
+
+    function renderReplayControls() {
+      const activeEntity = getActiveEntity();
+      const activeEntityRecording = isEntityRecording(activeEntity);
+      const activeEntityReplaying = isEntityReplaying(activeEntity);
+      const currentOptions = state.replayFiles;
+      const selectedValue = currentOptions.some((entry) => entry.fileName === (activeEntity?.selectedReplay || state.selectedReplay))
+        ? (activeEntity?.selectedReplay || state.selectedReplay)
+        : (currentOptions[0]?.fileName || "");
+
+      state.selectedReplay = selectedValue;
+      if (activeEntity) {
+        activeEntity.selectedReplay = selectedValue;
+      }
+      controls.replaySelect.innerHTML = currentOptions.length
+        ? currentOptions.map((entry) => `<option value="${entry.fileName}">${entry.fileName}</option>`).join("")
+        : `<option value="">No replays yet</option>`;
+      controls.replaySelect.value = selectedValue;
+      controls.replayBtn.disabled = !selectedValue || activeEntityRecording;
+      controls.replaySelect.disabled = activeEntityReplaying;
+      controls.refreshReplaysBtn.disabled = activeEntityReplaying;
+      controls.recordBtn.disabled = activeEntityReplaying;
+      controls.recordBtn.textContent = activeEntityRecording ? "Stop Rec" : "Start Rec";
+      controls.recordBtn.classList.toggle("secondary", !activeEntityRecording);
+      controls.replayBtn.textContent = activeEntityReplaying ? "Stop Replay" : "Replay";
+      controls.replayBtn.classList.toggle("secondary", !activeEntityReplaying);
+      ui.recordStatusText.textContent = activeEntityReplaying
+        ? `${state.replayLoop ? "looping" : "replaying"} ${state.selectedReplay || ""}`.trim()
+        : activeEntityRecording
+          ? "recording"
+          : "idle";
+      saveReplayCache();
+    }
+
+    function renderStartButton() {
+      const activeEntity = getActiveEntity();
+      const isRunning = Boolean(activeEntity?.running) || isEntityReplaying(activeEntity);
+      controls.startBtn.textContent = isRunning ? "Sending: ON" : "Sending: OFF";
+      controls.startBtn.classList.toggle("secondary", !isRunning);
+    }
+
+    function renderReceivingButtons() {
+      controls.toggleReceivingBtn.textContent = state.receivingEnabled ? "Receiving: ON" : "Receiving: OFF";
+      controls.toggleReceivingBtn.classList.toggle("secondary", !state.receivingEnabled);
+    }
+
+    async function refreshReplays() {
+      const response = await fetch("/api/replays");
+      const result = await response.json();
+      if (!result.ok) {
+        return;
+      }
+
+      state.replayFiles = result.replayFiles || [];
+      state.recording = Boolean(result.recordingActive);
+      if (result.activeReplayFile) {
+        state.selectedReplay = result.activeReplayFile;
+      }
+      if (!state.recording) {
+        state.recordEntityId = null;
+      }
+      renderReplayControls();
+      renderStartButton();
+      renderEntityTabs();
+    }
+
+    function stateHashForEntity(entity, ecef) {
+      if (!entity) {
+        return "";
+      }
+      return JSON.stringify({
+        e: entity.localEast.toFixed(2),
+        n: entity.localNorth.toFixed(2),
+        u: entity.localUp.toFixed(2),
+        yaw: entity.yawDeg.toFixed(2),
+        pitch: entity.pitchDeg.toFixed(2),
+        roll: entity.rollDeg.toFixed(2),
+        x: ecef.x.toFixed(2),
+        y: ecef.y.toFixed(2),
+        z: ecef.z.toFixed(2)
+      });
+    }
+
+    function resetEntityPose(entity) {
+      if (!entity) {
+        return;
+      }
+      entity.localEast = 0;
+      entity.localNorth = 0;
+      entity.localUp = Number(entity.config.startUp || 0);
+      entity.yawDeg = 0;
+      entity.pitchDeg = 0;
+      entity.rollDeg = 0;
+      entity.velocityEast = 0;
+      entity.velocityNorth = 0;
+      entity.velocityUp = 0;
+      entity.angularVelocityX = 0;
+      entity.angularVelocityY = 0;
+      entity.angularVelocityZ = 0;
+      entity.packetCount = 0;
+      entity.lastSendAt = 0;
+      entity.lastHeartbeatAt = 0;
+      entity.lastSentStateHash = "";
+      entity.sendInFlight = false;
+      clearEntityTrail(entity);
+      updateEntityTrail(entity);
+    }
+
+    function resetPose() {
+      const activeEntity = getActiveEntity();
+      resetEntityPose(activeEntity);
+      saveEntitiesCache();
+    }
+
+    async function startSendingEntity(entity) {
+      if (!entity) {
+        return;
+      }
+      if (entity.running) {
+        renderStartButton();
+        return;
+      }
+
+      entity.running = true;
+      renderStartButton();
+      renderEntityTabs();
+      try {
+        if (state.receivingEnabled) {
+          await ensureListener(Number(entity.config.listenPort));
+        }
+      } catch (error) {
+        entity.running = false;
+        renderStartButton();
+        renderEntityTabs();
+        throw error;
+      }
+      saveEntitiesCache();
+    }
+
+    async function stopSendingEntity(entity) {
+      if (!entity) {
+        return;
+      }
+      if (!entity.running) {
+        renderStartButton();
+        return;
+      }
+
+      entity.running = false;
+      renderStartButton();
+      renderEntityTabs();
+
+      try {
+        const config = structuredClone(entity.config);
+        const origin = geodeticToEcef(config.originLat, config.originLon, config.originAlt);
+        const basis = enuBasis(config.originLat, config.originLon);
+        const ecef = localToEcef(origin, basis, entity.localEast, entity.localNorth, entity.localUp);
+        await sendDeactivateState(entity, config, ecef);
+      } catch (error) {
+        appendLogEntry({
+          id: Date.now() + Math.random(),
+          timestamp: new Date().toISOString(),
+          type: "error",
+          message: `Stop send cleanup failed: ${error.message}`,
+          extra: { pduType: "System" }
+        });
+        renderLogs();
+      }
+      saveEntitiesCache();
+    }
+
+    async function startSending() {
+      const activeEntity = getActiveEntity();
+      await startSendingEntity(activeEntity);
+    }
+
+    async function stopSending() {
+      const activeEntity = getActiveEntity();
+      if (isEntityReplaying(activeEntity)) {
+        await stopReplayPlayback(activeEntity?.id);
+      }
+      await stopSendingEntity(activeEntity);
+    }
+
+    function updateMovement(entity, dt, config) {
+      if (!entity) {
+        return;
+      }
+      let moveForward = 0;
+      let moveRight = 0;
+      let moveUp = 0;
+      let yawDir = 0;
+      let pitchDir = 0;
+      let rollDir = 0;
+
+      if (state.keys.has("KeyW")) moveForward += 1;
+      if (state.keys.has("KeyS")) moveForward -= 1;
+      if (state.keys.has("KeyD")) moveRight += 1;
+      if (state.keys.has("KeyA")) moveRight -= 1;
+      if (state.keys.has("KeyR")) moveUp += 1;
+      if (state.keys.has("KeyF")) moveUp -= 1;
+      if (state.keys.has("KeyQ")) yawDir -= 1;
+      if (state.keys.has("KeyE")) yawDir += 1;
+      if (state.keys.has("KeyT")) pitchDir += 1;
+      if (state.keys.has("KeyG")) pitchDir -= 1;
+      if (state.keys.has("KeyZ")) rollDir -= 1;
+      if (state.keys.has("KeyC")) rollDir += 1;
+
+      // Keep translation in world/global ENU axes instead of local object axes.
+      const velEast = moveRight * config.moveSpeed;
+      const velNorth = moveForward * config.moveSpeed;
+      const velUp = moveUp * config.verticalSpeed;
+
+      entity.velocityEast = velEast;
+      entity.velocityNorth = velNorth;
+      entity.velocityUp = velUp;
+
+      entity.localEast += velEast * dt;
+      entity.localNorth += velNorth * dt;
+      entity.localUp += velUp * dt;
+
+      entity.angularVelocityX = degToRad(rollDir * config.turnSpeed);
+      entity.angularVelocityY = degToRad(pitchDir * config.turnSpeed);
+      entity.angularVelocityZ = degToRad(yawDir * config.turnSpeed);
+
+      entity.yawDeg += yawDir * config.turnSpeed * dt;
+      entity.pitchDeg += pitchDir * config.turnSpeed * dt;
+      entity.rollDeg += rollDir * config.turnSpeed * dt;
+    }
+
+    async function sendState(entity, config, ecef) {
+      return sendEntityStatePacket(entity, config, ecef, { appearance: 0 });
+    }
+
+    function maybeSendEntityUpdate(entity, config, ecef, currentHash, now, shouldSend) {
+      if (!entity || !shouldSend || entity.sendInFlight) {
+        return;
+      }
+
+      if (state.listenerPort !== Number(config.listenPort)) {
+        ensureListener(config.listenPort).catch((error) => {
+          appendLogEntry({
+            id: Date.now() + Math.random(),
+            timestamp: new Date().toISOString(),
+            type: "error",
+            message: error.message,
+            extra: { pduType: "System" }
+          });
+          renderLogs();
+        });
+        return;
+      }
+
+      entity.sendInFlight = true;
+      sendState(entity, config, ecef)
+        .then(() => {
+          entity.lastSendAt = now;
+          entity.lastHeartbeatAt = now;
+          entity.lastSentStateHash = currentHash;
+        })
+        .catch((error) => {
+          appendLogEntry({
+            id: Date.now() + Math.random(),
+            timestamp: new Date().toISOString(),
+            type: "error",
+            message: error.message,
+            extra: { pduType: "System" }
+          });
+          renderLogs();
+        })
+        .finally(() => {
+          entity.sendInFlight = false;
+        });
+    }
+
+    async function sendDeactivateState(entity, config, ecef) {
+      // Bit 23 marks the entity as deactivated in the DIS entity appearance field.
+      return sendEntityStatePacket(entity, config, ecef, { appearance: 1 << 23 });
+    }
+
+    async function sendEntityStatePacket(entity, config, ecef, options = {}) {
+      const basis = enuBasis(config.originLat, config.originLon);
+      const ecefVelocity = {
+        x: basis.east[0] * entity.velocityEast + basis.north[0] * entity.velocityNorth + basis.up[0] * entity.velocityUp,
+        y: basis.east[1] * entity.velocityEast + basis.north[1] * entity.velocityNorth + basis.up[1] * entity.velocityUp,
+        z: basis.east[2] * entity.velocityEast + basis.north[2] * entity.velocityNorth + basis.up[2] * entity.velocityUp
+      };
+
+      const payload = {
+        mode: config.mode,
+        targetHost: config.targetHost,
+        targetPort: config.targetPort,
+        multicastTtl: config.multicastTtl,
+        exerciseId: config.exerciseId,
+        siteId: config.siteId,
+        applicationId: config.applicationId,
+        entityId: config.entityId,
+        forceId: config.forceId,
+        marking: config.marking,
+        entityType: config.entityType,
+        alternativeEntityType: config.entityType,
+        velocityX: ecefVelocity.x,
+        velocityY: ecefVelocity.y,
+        velocityZ: ecefVelocity.z,
+        accelerationX: 0,
+        accelerationY: 0,
+        accelerationZ: 0,
+        angularVelocityX: entity.angularVelocityX,
+        angularVelocityY: entity.angularVelocityY,
+        angularVelocityZ: entity.angularVelocityZ,
+        clientState: {
+          localEast: entity.localEast,
+          localNorth: entity.localNorth,
+          localUp: entity.localUp,
+          yawDeg: entity.yawDeg,
+          pitchDeg: entity.pitchDeg,
+          rollDeg: entity.rollDeg,
+          velocityEast: entity.velocityEast,
+          velocityNorth: entity.velocityNorth,
+          velocityUp: entity.velocityUp
+        },
+        ecefX: ecef.x,
+        ecefY: ecef.y,
+        ecefZ: ecef.z,
+        appearance: options.appearance ?? 0,
+        deadReckoningAlgorithm: options.deadReckoningAlgorithm ?? 3,
+        isReplay: Boolean(options.isReplay),
+        replaySourceFile: options.replaySourceFile || "",
+        replayEntityKey: options.replayEntityKey ? String(options.replayEntityKey) : "",
+        psi: degToRad(entity.yawDeg),
+        theta: degToRad(entity.pitchDeg),
+        phi: degToRad(entity.rollDeg)
+      };
+
+      const response = await fetch("/api/entity-state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Unknown send error");
+      }
+
+      entity.packetCount += 1;
+    }
+
+    async function ensureListener(port) {
+      if (!state.receivingEnabled) {
+        return;
+      }
+
+      if (state.listenerPort === port) {
+        return;
+      }
+
+      const response = await fetch("/api/listener", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: true, listenPort: port })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Listener start failed");
+      }
+      state.listenerPort = result.listenerPort;
+    }
+
+    async function stopReceiving() {
+      state.receivingEnabled = false;
+      state.listenerSyncPromise = null;
+
+      const response = await fetch("/api/listener", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: false })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Listener stop failed");
+      }
+
+      state.listenerPort = null;
+      clearReceivedEntityTrails();
+    }
+
+    async function startReceiving() {
+      state.receivingEnabled = true;
+      const activeEntity = getActiveEntity();
+      const desiredPort = Number(activeEntity?.config?.listenPort || controls.listenPort.value || 0);
+      await ensureListener(desiredPort);
+    }
+
+    async function syncListenerToActiveEntity() {
+      if (!state.receivingEnabled) {
+        return;
+      }
+
+      const activeEntity = getActiveEntity();
+      const desiredPort = Number(activeEntity?.config?.listenPort || controls.listenPort.value || 0);
+      if (!desiredPort || state.listenerPort === desiredPort) {
+        return;
+      }
+      if (state.listenerSyncPromise) {
+        return state.listenerSyncPromise;
+      }
+
+      state.listenerSyncPromise = ensureListener(desiredPort)
+        .catch((error) => {
+          appendLogEntry({
+            id: Date.now() + Math.random(),
+            timestamp: new Date().toISOString(),
+            type: "error",
+            message: error.message,
+            extra: { pduType: "System" }
+          });
+          renderLogs();
+        })
+        .finally(() => {
+          state.listenerSyncPromise = null;
+        });
+
+      return state.listenerSyncPromise;
+    }
+
+    async function refreshLogs() {
+      if (state.receivingEnabled) {
+        await syncListenerToActiveEntity();
+      }
+      const response = await fetch("/api/state");
+      const result = await response.json();
+      if (!result.ok) {
+        return;
+      }
+
+      if (!controls.targetHost.dataset.initialized) {
+        applyServerDefaults(result.defaults);
+        controls.targetHost.dataset.initialized = "true";
+      }
+
+      state.listenerPort = result.listenerPort;
+      state.logs = Array.isArray(result.logs) ? result.logs.slice(-500) : [];
+      state.receivedEntities = Array.isArray(result.receivedEntities) ? result.receivedEntities : [];
+      updateReceivedEntityTrails(state.receivedEntities);
+      renderLogs();
+    }
+
+    function renderLogs() {
+      const hasPreservedScroll = Number.isFinite(state.preserveLogScrollTop);
+      const previousScrollTop = hasPreservedScroll ? state.preserveLogScrollTop : ui.logView.scrollTop;
+      const wasNearBottom = !hasPreservedScroll && (ui.logView.scrollHeight - ui.logView.scrollTop - ui.logView.clientHeight) < 24;
+
+      const visibleTypes = new Set();
+      if (controls.logSend.checked) visibleTypes.add("send");
+      if (controls.logReceive.checked) visibleTypes.add("receive");
+      if (controls.logInfo.checked) visibleTypes.add("info");
+      if (controls.logError.checked) visibleTypes.add("error");
+
+      const filteredLogs = state.logs
+        .filter((entry) => visibleTypes.has(entry.type))
+        .filter((entry) => state.selectedPduTypes.has(getEntryPduType(entry)))
+        .filter((entry) => {
+          const entityName = getEntryEntityName(entry);
+          return !entityName || state.selectedEntityNames.has(entityName);
+        });
+
+      const escapeHtml = (value) => String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+
+      const formatDetails = (entry) => {
+        if (!entry.extra || Object.keys(entry.extra).length === 0) {
+          return "";
+        }
+        return escapeHtml(JSON.stringify(entry.extra, null, 2));
+      };
+
+      const rows = filteredLogs
+        .map((entry, index) => {
+          const hasDetails = entry.extra && Object.keys(entry.extra).length > 0;
+          const isExpanded = state.expandedLogIds.has(entry.id);
+          const entityPrefix = getEntryEntityName(entry) ? `[${escapeHtml(getEntryEntityName(entry))}] ` : "";
+          const expandButton = hasDetails
+            ? `<button class="log-expand" type="button" data-log-id="${entry.id}">${isExpanded ? "v" : ">"}</button>`
+            : `<span></span>`;
+          const detailsHtml = hasDetails && isExpanded
+            ? `<div class="log-details"><button class="log-copy-btn" type="button" data-copy-log-id="${entry.id}">Copy</button><div class="log-details-pre">${formatDetails(entry)}</div></div>`
+            : "";
+          return `<div class="log-line log-${entry.type}"><div class="log-index">${index + 1}</div><div class="log-text">${entityPrefix}[${entry.timestamp}] ${entry.type.toUpperCase()}  ${escapeHtml(entry.message)}</div>${expandButton}${detailsHtml}</div>`;
+        });
+
+      ui.logView.innerHTML = rows.length ? rows.join("") : "No log lines for current filters.";
+      renderEntityFilterDropdown();
+      renderPduFilterDropdown();
+      if (hasPreservedScroll) {
+        ui.logView.scrollTop = previousScrollTop;
+        state.preserveLogScrollTop = null;
+      } else if (wasNearBottom) {
+        ui.logView.scrollTop = ui.logView.scrollHeight;
+      }
+    }
+
+    function copyTextToClipboard(text) {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        return navigator.clipboard.writeText(text);
+      }
+
+      return new Promise((resolve, reject) => {
+        try {
+          const helper = document.createElement("textarea");
+          helper.value = text;
+          helper.setAttribute("readonly", "");
+          helper.style.position = "fixed";
+          helper.style.opacity = "0";
+          helper.style.pointerEvents = "none";
+          helper.style.left = "-9999px";
+          helper.style.top = "0";
+          document.body.appendChild(helper);
+          helper.focus();
+          helper.select();
+          helper.setSelectionRange(0, helper.value.length);
+          const ok = document.execCommand("copy");
+          document.body.removeChild(helper);
+          if (!ok) {
+            reject(new Error("Copy command failed"));
+            return;
+          }
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    function drawScene() {
+      const activeEntity = getActiveEntity();
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const scale = Math.max(0.1, Number(activeEntity?.config?.mapScale || controls.mapScale.value || 3));
+      const cameraX = (activeEntity?.localEast || 0) * scale;
+      const cameraY = -(activeEntity?.localNorth || 0) * scale;
+      const gridSize = 36;
+
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 1;
+      const offsetX = ((cameraX % gridSize) + gridSize) % gridSize;
+      const offsetY = ((cameraY % gridSize) + gridSize) % gridSize;
+
+      for (let x = -w / 2 - gridSize; x <= w / 2 + gridSize; x += gridSize) {
+        const gridX = Math.round(x - offsetX);
+        ctx.beginPath();
+        ctx.moveTo(gridX, -h / 2);
+        ctx.lineTo(gridX, h / 2);
+        ctx.stroke();
+      }
+
+      for (let y = -h / 2 - gridSize; y <= h / 2 + gridSize; y += gridSize) {
+        const gridY = Math.round(y - offsetY);
+        ctx.beginPath();
+        ctx.moveTo(-w / 2, gridY);
+        ctx.lineTo(w / 2, gridY);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.beginPath();
+      ctx.moveTo(-w / 2, 0);
+      ctx.lineTo(w / 2, 0);
+      ctx.moveTo(0, -h / 2);
+      ctx.lineTo(0, h / 2);
+      ctx.stroke();
+
+      ctx.fillStyle = "#7cf29a";
+      ctx.font = "14px ui-monospace, monospace";
+      ctx.fillText("N", 8, -h / 2 + 18);
+      ctx.fillText("E", w / 2 - 18, -8);
+
+      if (activeEntity?.config) {
+        const origin = geodeticToEcef(activeEntity.config.originLat, activeEntity.config.originLon, activeEntity.config.originAlt);
+        const basis = enuBasis(activeEntity.config.originLat, activeEntity.config.originLon);
+        const markerScale = 0.65;
+        const activeKey = `${activeEntity.config.siteId}:${activeEntity.config.applicationId}:${activeEntity.config.entityId}`;
+        const localEntityKeys = new Set([activeKey]);
+
+        if (controls.showTrails.checked) {
+          drawEntityTrail(activeEntity, origin, basis, activeEntity, scale, `rgba(76, 194, 255, ${getTrailAlpha()})`);
+        }
+
+        for (const otherEntity of state.entities) {
+          if (!otherEntity || otherEntity.id === activeEntity.id) {
+            continue;
+          }
+          if (!otherEntity.running && !isEntityReplaying(otherEntity)) {
+            continue;
+          }
+
+          const otherConfig = otherEntity.config;
+          if (controls.showTrails.checked) {
+            drawEntityTrail(otherEntity, origin, basis, activeEntity, scale, `rgba(255, 180, 84, ${getTrailAlpha()})`);
+          }
+          const otherOrigin = geodeticToEcef(otherConfig.originLat, otherConfig.originLon, otherConfig.originAlt);
+          const otherBasis = enuBasis(otherConfig.originLat, otherConfig.originLon);
+          const otherEcef = localToEcef(otherOrigin, otherBasis, otherEntity.localEast, otherEntity.localNorth, otherEntity.localUp);
+          const local = ecefToLocal(origin, basis, otherEcef);
+          const drawX = (local.east - (activeEntity.localEast || 0)) * scale;
+          const drawY = -(local.north - (activeEntity.localNorth || 0)) * scale;
+          const entityKey = `${otherConfig.siteId}:${otherConfig.applicationId}:${otherConfig.entityId}`;
+          localEntityKeys.add(entityKey);
+
+          drawEntityMarker(drawX, drawY, otherEntity.yawDeg || 0, "#ffb454", markerScale);
+        }
+
+        for (const receivedEntity of state.receivedEntities) {
+          const receivedKey = `${receivedEntity.siteId}:${receivedEntity.applicationId}:${receivedEntity.entityId}`;
+          if (localEntityKeys.has(receivedKey)) {
+            continue;
+          }
+
+          if (controls.showTrails.checked) {
+            drawReceivedEntityTrail(receivedKey, origin, basis, activeEntity, scale, `rgba(124, 242, 154, ${getTrailAlpha()})`);
+          }
+
+          const local = ecefToLocal(origin, basis, receivedEntity.ecef);
+          const drawX = (local.east - (activeEntity.localEast || 0)) * scale;
+          const drawY = -(local.north - (activeEntity.localNorth || 0)) * scale;
+          const yawDeg = Number(receivedEntity.orientation?.psi || 0) * 180 / Math.PI;
+
+          drawEntityMarker(drawX, drawY, yawDeg, "#7cf29a", markerScale);
+        }
+
+        drawEntityMarker(0, 0, activeEntity?.yawDeg || 0, "#4cc2ff", 1);
+      }
+
+      ctx.restore();
+    }
+
+    function applyReplayClientState(entity, summary) {
+      if (!entity || !summary) {
+        return;
+      }
+
+      entity.localEast = Number(summary.localState?.east || 0);
+      entity.localNorth = Number(summary.localState?.north || 0);
+      entity.localUp = Number(summary.localState?.up || 0);
+      entity.yawDeg = Number(summary.orientationDegrees?.yaw || 0);
+      entity.pitchDeg = Number(summary.orientationDegrees?.pitch || 0);
+      entity.rollDeg = Number(summary.orientationDegrees?.roll || 0);
+      entity.velocityEast = Number(summary.velocityEnu?.east || 0);
+      entity.velocityNorth = Number(summary.velocityEnu?.north || 0);
+      entity.velocityUp = Number(summary.velocityEnu?.up || 0);
+    }
+
+    async function stopRecordingIfActive(targetEntityId = state.activeEntityId) {
+      const targetEntity = state.entities.find((entity) => entity.id === targetEntityId) || null;
+      if (!targetEntity || !isEntityRecording(targetEntity)) {
+        return;
+      }
+
+      const response = await fetch("/api/replays/record/stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Record stop failed");
+      }
+
+      state.recording = false;
+      state.recordEntityId = null;
+      state.replayFiles = result.replayFiles || [];
+      state.selectedReplay = result.fileName || state.selectedReplay;
+      if (targetEntity) {
+        targetEntity.selectedReplay = state.selectedReplay;
+      }
+      renderReplayControls();
+    }
+
+    async function startReplayPlayback(targetEntityId = state.activeEntityId) {
+      const replayEntity = state.entities.find((entity) => entity.id === targetEntityId) || null;
+      const replayFileName = replayEntity?.selectedReplay || state.selectedReplay;
+      if (!replayFileName || !replayEntity) {
+        return;
+      }
+
+      await stopRecordingIfActive(targetEntityId);
+
+      replayEntity.running = false;
+      replayEntity.replaying = true;
+      renderStartButton();
+      renderEntityTabs();
+
+      const detailResponse = await fetch(`/api/replays/file?fileName=${encodeURIComponent(replayFileName)}`);
+      const detailResult = await detailResponse.json();
+      if (!detailResponse.ok || !detailResult.ok) {
+        throw new Error(detailResult.error || "Replay file load failed");
+      }
+
+      clearEntityReplayTimers(replayEntity);
+      renderStartButton();
+      renderReplayControls();
+      renderEntityTabs();
+
+      const entries = detailResult.replay.entries || [];
+      let maxDelay = 0;
+      const config = structuredClone(replayEntity.config);
+      const origin = geodeticToEcef(config.originLat, config.originLon, config.originAlt);
+      const basis = enuBasis(config.originLat, config.originLon);
+      const replayEntityKey = String(replayEntity.id);
+
+      for (const entry of entries) {
+        const delayMs = Number(entry.delayMs || 0);
+        maxDelay = Math.max(maxDelay, delayMs);
+        const timerId = setTimeout(async () => {
+          if (!isEntityReplaying(replayEntity)) {
+            return;
+          }
+          if (entry.summary) {
+            applyReplayClientState(replayEntity, entry.summary);
+          } else if (entry.ecef) {
+            const deltaX = Number(entry.ecef.x || 0) - origin.x;
+            const deltaY = Number(entry.ecef.y || 0) - origin.y;
+            const deltaZ = Number(entry.ecef.z || 0) - origin.z;
+            applyReplayClientState(replayEntity, {
+              localState: {
+                east: deltaX * basis.east[0] + deltaY * basis.east[1] + deltaZ * basis.east[2],
+                north: deltaX * basis.north[0] + deltaY * basis.north[1] + deltaZ * basis.north[2],
+                up: deltaX * basis.up[0] + deltaY * basis.up[1] + deltaZ * basis.up[2]
+              },
+              orientationDegrees: entry.orientationDegrees || {},
+              velocityEnu: {}
+            });
+          }
+
+          try {
+            const ecef = localToEcef(origin, basis, replayEntity.localEast, replayEntity.localNorth, replayEntity.localUp);
+            await sendEntityStatePacket(replayEntity, config, ecef, {
+              appearance: Number(entry.summary?.appearance ?? 0),
+              deadReckoningAlgorithm: Number(entry.summary?.deadReckoningAlgorithm ?? 3),
+              isReplay: true,
+              replaySourceFile: replayFileName,
+              replayEntityKey
+            });
+            replayEntity.lastSendAt = performance.now();
+            replayEntity.lastHeartbeatAt = performance.now();
+            replayEntity.lastSentStateHash = stateHashForEntity(replayEntity, ecef);
+          } catch (error) {
+            appendLogEntry({
+              id: Date.now() + Math.random(),
+              timestamp: new Date().toISOString(),
+              type: "error",
+              message: `Replay send failed: ${error.message}`,
+              extra: {
+                pduType: "Replay",
+                entityName: replayEntity.config.marking
+              }
+            });
+            renderLogs();
+          }
+        }, delayMs);
+        replayEntity.replayTimers.push(timerId);
+      }
+
+      const finishTimer = setTimeout(() => {
+        if (isEntityReplaying(replayEntity) && state.replayLoop) {
+          clearEntityReplayTimers(replayEntity);
+          startReplayPlayback(replayEntity.id).catch((error) => {
+            replayEntity.replaying = false;
+            renderStartButton();
+            renderReplayControls();
+            renderEntityTabs();
+            appendLogEntry({
+              id: Date.now() + Math.random(),
+              timestamp: new Date().toISOString(),
+              type: "error",
+              message: error.message,
+              extra: { pduType: "System" }
+            });
+            renderLogs();
+          });
+          return;
+        }
+        if (isEntityReplaying(replayEntity)) {
+          replayEntity.replaying = false;
+        }
+        clearEntityReplayTimers(replayEntity);
+        renderStartButton();
+        renderReplayControls();
+        renderEntityTabs();
+      }, maxDelay + 250);
+      replayEntity.replayTimers.push(finishTimer);
+    }
+
+    async function stopReplayPlayback(targetEntityId = state.activeEntityId) {
+      const targetEntity = state.entities.find((entity) => entity.id === targetEntityId) || null;
+      if (!targetEntity || !targetEntity.replaying) {
+        return;
+      }
+
+      clearEntityReplayTimers(targetEntity);
+      targetEntity.replaying = false;
+      targetEntity.running = true;
+      renderStartButton();
+      renderEntityTabs();
+      renderReplayControls();
+    }
+
+    function updateUi(ecef) {
+      const activeEntity = getActiveEntity();
+      ui.statusText.textContent = activeEntity?.running ? "sending" : "idle";
+      ui.packetCount.textContent = String(activeEntity?.packetCount || 0);
+      ui.ecefX.textContent = ecef.x.toFixed(2);
+      ui.ecefYZ.textContent = `${ecef.y.toFixed(2)} / ${ecef.z.toFixed(2)}`;
+      ui.localPos.textContent = `${(activeEntity?.localEast || 0).toFixed(1)} / ${(activeEntity?.localNorth || 0).toFixed(1)} / ${(activeEntity?.localUp || 0).toFixed(1)}`;
+      ui.angles.textContent = `${(activeEntity?.yawDeg || 0).toFixed(1)} / ${(activeEntity?.pitchDeg || 0).toFixed(1)} / ${(activeEntity?.rollDeg || 0).toFixed(1)}`;
+      ui.velocity.textContent = `${(activeEntity?.velocityEast || 0).toFixed(1)} / ${(activeEntity?.velocityNorth || 0).toFixed(1)} / ${(activeEntity?.velocityUp || 0).toFixed(1)}`;
+      ui.listenerText.textContent = state.receivingEnabled && state.listenerPort ? `port ${state.listenerPort}` : "off";
+    }
+
+    let lastFrame = performance.now();
+
+    function frame(now) {
+      requestAnimationFrame(frame);
+      const dt = Math.min((now - lastFrame) / 1000, 0.05);
+      lastFrame = now;
+
+      const activeEntity = getActiveEntity();
+      if (activeEntity) {
+        syncActiveEntityFromControls();
+      }
+
+      if (activeEntity && !isEntityReplaying(activeEntity)) {
+        updateMovement(activeEntity, dt, activeEntity.config);
+      }
+
+      let activeEntityEcef = { x: 0, y: 0, z: 0 };
+
+      for (const entity of state.entities) {
+        const config = entity.config;
+        const origin = geodeticToEcef(config.originLat, config.originLon, config.originAlt);
+        const basis = enuBasis(config.originLat, config.originLon);
+        const ecef = localToEcef(origin, basis, entity.localEast, entity.localNorth, entity.localUp);
+        updateEntityTrail(entity);
+
+        if (entity.id === state.activeEntityId) {
+          activeEntityEcef = ecef;
+        }
+
+        if (!entity.running) {
+          continue;
+        }
+
+        const currentHash = JSON.stringify({
+          e: entity.localEast.toFixed(2),
+          n: entity.localNorth.toFixed(2),
+          u: entity.localUp.toFixed(2),
+          yaw: entity.yawDeg.toFixed(2),
+          pitch: entity.pitchDeg.toFixed(2),
+          roll: entity.rollDeg.toFixed(2),
+          x: ecef.x.toFixed(2),
+          y: ecef.y.toFixed(2),
+          z: ecef.z.toFixed(2)
+        });
+        const minSendInterval = 1000 / config.sendRate;
+        const changed = currentHash !== entity.lastSentStateHash;
+        const shouldSendMove = changed && (now - entity.lastSendAt >= minSendInterval);
+        const shouldSendHeartbeat = !changed && (now - entity.lastHeartbeatAt >= config.heartbeatDelayMs);
+
+        maybeSendEntityUpdate(entity, config, ecef, currentHash, now, shouldSendMove || shouldSendHeartbeat);
+      }
+
+      drawScene();
+      updateUi(activeEntityEcef);
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) {
+        return;
+      }
+      state.keys.add(event.code);
+    });
+
+    document.addEventListener("keyup", (event) => {
+      state.keys.delete(event.code);
+    });
+
+    function clearPressedKeys() {
+      const activeEntity = getActiveEntity();
+      state.keys.clear();
+      if (activeEntity) {
+        activeEntity.velocityEast = 0;
+        activeEntity.velocityNorth = 0;
+        activeEntity.velocityUp = 0;
+        activeEntity.angularVelocityX = 0;
+        activeEntity.angularVelocityY = 0;
+        activeEntity.angularVelocityZ = 0;
+      }
+    }
+
+    window.addEventListener("blur", clearPressedKeys);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        clearPressedKeys();
+      }
+    });
+
+    canvas.addEventListener("wheel", (event) => {
+      const activeEntity = getActiveEntity();
+      if (!activeEntity) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const currentScale = Math.max(0.1, Number(activeEntity?.config?.mapScale || controls.mapScale.value || 0.7));
+      const zoomFactor = event.deltaY < 0 ? 1.1 : (1 / 1.1);
+      applyViewportScale(currentScale * zoomFactor);
+    }, { passive: false });
+
+    controls.startBtn.addEventListener("click", async () => {
+      try {
+        const activeEntity = getActiveEntity();
+        if (!activeEntity?.running) {
+          await startSending();
+        } else {
+          await stopSending();
+        }
+      } catch (error) {
+      }
+    });
+
+    controls.resetBtn.addEventListener("click", resetPose);
+    controls.toggleReceivingBtn.addEventListener("click", async () => {
+      try {
+        if (state.receivingEnabled) {
+          await stopReceiving();
+        } else {
+          await startReceiving();
+        }
+        renderReceivingButtons();
+        renderLogs();
+      } catch (error) {
+        appendLogEntry({
+          id: Date.now() + Math.random(),
+          timestamp: new Date().toISOString(),
+          type: "error",
+          message: error.message,
+          extra: { pduType: "System" }
+        });
+        renderLogs();
+      }
+    });
+    controls.randomizeEntityIdBtn.addEventListener("click", randomizeEntityId);
+    controls.recordBtn.addEventListener("click", async () => {
+      try {
+        const activeEntity = getActiveEntity();
+        if (isEntityReplaying(activeEntity)) {
+          return;
+        }
+        if (!state.recording) {
+          await startSending();
+          const response = await fetch("/api/replays/record/start", { method: "POST" });
+          const result = await response.json();
+        if (!response.ok || !result.ok) {
+          throw new Error(result.error || "Record start failed");
+        }
+        state.recording = true;
+        state.recordEntityId = activeEntity?.id ?? null;
+          renderReplayControls();
+          return;
+        }
+
+        if (!isEntityRecording(activeEntity)) {
+          return;
+        }
+
+        const response = await fetch("/api/replays/record/stop", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) {
+          throw new Error(result.error || "Record stop failed");
+        }
+        state.recording = false;
+        state.recordEntityId = null;
+        state.replayFiles = result.replayFiles || [];
+        state.selectedReplay = result.fileName || state.selectedReplay;
+        if (activeEntity) {
+          activeEntity.selectedReplay = state.selectedReplay;
+        }
+        renderReplayControls();
+      } catch (error) {
+        appendLogEntry({
+          id: Date.now() + Math.random(),
+          timestamp: new Date().toISOString(),
+          type: "error",
+          message: error.message
+        });
+        renderLogs();
+      }
+    });
+    controls.replayBtn.addEventListener("click", async () => {
+      try {
+        const activeEntity = getActiveEntity();
+        if (isEntityRecording(activeEntity) && !isEntityReplaying(activeEntity)) {
+          return;
+        }
+        if (isEntityReplaying(activeEntity)) {
+          await stopReplayPlayback(activeEntity?.id);
+        } else {
+          await startReplayPlayback();
+        }
+      } catch (error) {
+        appendLogEntry({
+          id: Date.now() + Math.random(),
+          timestamp: new Date().toISOString(),
+          type: "error",
+          message: error.message
+        });
+        renderLogs();
+      }
+    });
+    controls.refreshReplaysBtn.addEventListener("click", refreshReplays);
+    controls.replaySelect.addEventListener("change", () => {
+      state.selectedReplay = controls.replaySelect.value;
+      const activeEntity = getActiveEntity();
+      if (activeEntity) {
+        activeEntity.selectedReplay = state.selectedReplay;
+      }
+      saveReplayCache();
+      saveEntitiesCache();
+      renderReplayControls();
+    });
+    controls.replayLoop.addEventListener("change", () => {
+      state.replayLoop = controls.replayLoop.checked;
+      saveReplayCache();
+      renderReplayControls();
+    });
+    controls.clearEntitiesBtn.addEventListener("click", async () => {
+      if (!window.confirm("Are you sure? This will stop all entities, stop replay/recording, close tabs, and clear logs.")) {
+        return;
+      }
+      try {
+        await clearAllEntities();
+      } catch (error) {
+        appendLogEntry({
+          id: Date.now() + Math.random(),
+          timestamp: new Date().toISOString(),
+          type: "error",
+          message: error.message,
+          extra: { pduType: "System" }
+        });
+        renderLogs();
+      }
+    });
+    controls.entityTabs.addEventListener("click", async (event) => {
+      const closeButton = event.target.closest("[data-entity-close-id]");
+      if (closeButton) {
+        const entityId = Number(closeButton.dataset.entityCloseId);
+        const entityToClose = state.entities.find((entity) => entity.id === entityId);
+        if (!entityToClose) {
+          return;
+        }
+
+        if (entityToClose.running) {
+          await stopSendingEntity(entityToClose);
+        }
+
+        if (isEntityRecording(entityToClose)) {
+          try {
+            const response = await fetch("/api/replays/record/stop", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({})
+            });
+            const result = await response.json();
+            if (response.ok && result.ok) {
+              state.recording = false;
+              state.recordEntityId = null;
+              state.replayFiles = result.replayFiles || [];
+              state.selectedReplay = result.fileName || state.selectedReplay;
+            }
+          } catch (error) {
+          }
+        }
+
+        if (isEntityReplaying(entityToClose)) {
+          try {
+            await stopReplayPlayback(entityId);
+          } catch (error) {
+          }
+        }
+
+        removeEntityTrailState(entityToClose);
+        state.entities = state.entities.filter((entity) => entity.id !== entityId);
+        if (!state.entities.length) {
+          const replacementEntity = createNewEntityFromCurrentControls("Entity 1");
+          state.entities = [replacementEntity];
+        }
+        if (!state.entities.some((entity) => entity.id === state.activeEntityId)) {
+          state.activeEntityId = state.entities[0]?.id ?? null;
+        }
+        applyEntityToControls(getActiveEntity());
+        renderEntityTabs();
+        renderStartButton();
+        renderReplayControls();
+        saveEntitiesCache();
+        return;
+      }
+
+      const tabButton = event.target.closest("[data-entity-tab-id]");
+      if (!tabButton) {
+        return;
+      }
+
+      const entityId = Number(tabButton.dataset.entityTabId);
+      syncActiveEntityFromControls();
+      state.activeEntityId = entityId;
+      applyEntityToControls(getActiveEntity());
+      renderEntityTabs();
+      renderStartButton();
+      renderReplayControls();
+      syncListenerToActiveEntity();
+      saveEntitiesCache();
+    });
+    ui.logView.addEventListener("click", (event) => {
+      const copyButton = event.target.closest("[data-copy-log-id]");
+      if (copyButton) {
+        const logId = Number(copyButton.dataset.copyLogId);
+        const entry = state.logs.find((item) => Number(item.id) === logId);
+        if (entry?.extra) {
+          copyTextToClipboard(JSON.stringify(entry.extra, null, 2)).then(() => {
+            copyButton.textContent = "Copied";
+            copyButton.disabled = true;
+            setTimeout(() => {
+              copyButton.textContent = "Copy";
+              copyButton.disabled = false;
+            }, 900);
+          }).catch(() => {
+            copyButton.textContent = "Failed";
+            copyButton.disabled = true;
+            setTimeout(() => {
+              copyButton.textContent = "Copy";
+              copyButton.disabled = false;
+            }, 1200);
+          });
+        }
+        return;
+      }
+
+      const button = event.target.closest("[data-log-id]");
+      if (!button) {
+        return;
+      }
+      state.preserveLogScrollTop = ui.logView.scrollTop;
+      const logId = Number(button.dataset.logId);
+      if (state.expandedLogIds.has(logId)) {
+        state.expandedLogIds.delete(logId);
+      } else {
+        state.expandedLogIds.add(logId);
+      }
+      renderLogs();
+    });
+    controls.pduFilterBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      controls.pduFilterDropdown.classList.toggle("open");
+      if (controls.pduFilterDropdown.classList.contains("open")) {
+        controls.pduFilterSearch.focus();
+      }
+    });
+    controls.settingsBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      controls.settingsDropdown.classList.toggle("open");
+    });
+    controls.entityFilterBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      controls.entityFilterDropdown.classList.toggle("open");
+      if (controls.entityFilterDropdown.classList.contains("open")) {
+        controls.entityFilterSearch.focus();
+      }
+    });
+    document.addEventListener("click", (event) => {
+      if (!controls.pduFilterDropdown.contains(event.target)) {
+        controls.pduFilterDropdown.classList.remove("open");
+      }
+      if (!controls.settingsDropdown.contains(event.target)) {
+        controls.settingsDropdown.classList.remove("open");
+      }
+      if (!controls.entityFilterDropdown.contains(event.target)) {
+        controls.entityFilterDropdown.classList.remove("open");
+      }
+    });
+    controls.pduFilterSearch.addEventListener("input", () => {
+      state.pduFilterSearch = controls.pduFilterSearch.value;
+      renderPduFilterDropdown();
+    });
+    controls.entityFilterSearch.addEventListener("input", () => {
+      state.entityFilterSearch = controls.entityFilterSearch.value;
+      renderEntityFilterDropdown();
+    });
+    controls.pduFilterList.addEventListener("change", (event) => {
+      const input = event.target.closest("[data-pdu-type]");
+      if (!input) {
+        return;
+      }
+      const pduType = input.dataset.pduType;
+      if (input.checked) {
+        state.selectedPduTypes.add(pduType);
+      } else {
+        state.selectedPduTypes.delete(pduType);
+      }
+      saveLogFilterCache();
+      renderLogs();
+    });
+    controls.entityFilterList.addEventListener("change", (event) => {
+      const input = event.target.closest("[data-entity-name]");
+      if (!input) {
+        return;
+      }
+      const entityName = input.dataset.entityName;
+      if (input.checked) {
+        state.selectedEntityNames.add(entityName);
+      } else {
+        state.selectedEntityNames.delete(entityName);
+      }
+      saveLogFilterCache();
+      renderLogs();
+    });
+    controls.clearLogBtn.addEventListener("click", async () => {
+      try {
+        await fetch("/api/logs/clear", { method: "POST" });
+      } catch (error) {
+      }
+      state.logs = [];
+      clearReceivedEntityTrails();
+      renderLogs();
+    });
+    controls.resetSettingsBtn.addEventListener("click", () => {
+      if (!window.confirm("Reset all settings and clear cached values?")) {
+        return;
+      }
+      resetSettingsToDefaults();
+    });
+
+    [controls.logSend, controls.logReceive, controls.logInfo, controls.logError].forEach((input) => {
+      input.addEventListener("change", () => {
+        saveLogFilterCache();
+        renderLogs();
+      });
+    });
+
+    [
+      controls.connectionMode,
+      controls.targetHost,
+      controls.targetPort,
+      controls.multicastTtl,
+      controls.listenPort,
+      controls.heartbeatDelayMs,
+      controls.exerciseId,
+      controls.siteId,
+      controls.applicationId,
+      controls.entityId,
+      controls.forceId,
+      controls.marking,
+      controls.originLat,
+      controls.originLon,
+      controls.originAlt,
+      controls.startUp,
+      controls.moveSpeed,
+      controls.turnSpeed,
+      controls.sendRate,
+      controls.verticalSpeed,
+      controls.mapScale,
+      controls.showTrails,
+      controls.trailAlpha,
+      controls.entityKind,
+      controls.domain,
+      controls.country,
+      controls.category,
+      controls.subcategory,
+      controls.specific,
+      controls.extra
+    ].forEach((input) => {
+      input.addEventListener("input", () => {
+        if (input === controls.showTrails) {
+          updateSettingsUi();
+        }
+        syncActiveEntityFromControls();
+        saveCachedForm();
+        saveEntityTypeCache();
+        saveEntitiesCache();
+        renderEntityTabs();
+        if (input === controls.listenPort) {
+          syncListenerToActiveEntity();
+        }
+      });
+      input.addEventListener("change", () => {
+        if (input === controls.showTrails) {
+          updateSettingsUi();
+        }
+        syncActiveEntityFromControls();
+        if (input === controls.marking) {
+          const activeEntity = getActiveEntity();
+          const trimmedMarking = controls.marking.value.trim();
+          if (activeEntity && trimmedMarking) {
+            const desiredLabel = makeUniqueEntityLabel(trimmedMarking, activeEntity.id);
+            activeEntity.config.marking = desiredLabel;
+            activeEntity.tabName = desiredLabel;
+            controls.marking.value = desiredLabel;
+          }
+        }
+        saveCachedForm();
+        saveEntityTypeCache();
+        saveEntitiesCache();
+        renderEntityTabs();
+        if (input === controls.listenPort) {
+          syncListenerToActiveEntity();
+        }
+      });
+    });
+
+    loadCachedForm();
+    loadEntityTypeCache();
+    loadEntitiesCache();
+    updateSettingsUi();
+    if (!state.entities.length) {
+      const firstEntity = buildEntitySnapshotFromControls(state.nextEntityId++, "Entity 1");
+      state.entities = [firstEntity];
+      state.activeEntityId = firstEntity.id;
+    }
+    state.entities = state.entities.map((entity) => initializeEntityRuntimeState(entity));
+    applyEntityToControls(getActiveEntity());
+    loadLogFilterCache();
+    loadReplayCache();
+    resetPose();
+    renderStartButton();
+    renderReceivingButtons();
+    renderReplayControls();
+    renderPduFilterDropdown();
+    renderEntityFilterDropdown();
+    renderEntityTabs();
+    syncListenerToActiveEntity();
+    controls.entityTabs.addEventListener("click", (event) => {
+      const addButton = event.target.closest("#addEntityTabBtn");
+      if (!addButton) {
+        return;
+      }
+      const newEntity = createNewEntityFromCurrentControls(`Entity ${state.entities.length + 1}`);
+      state.entities.push(newEntity);
+      state.activeEntityId = newEntity.id;
+      applyEntityToControls(newEntity);
+      renderEntityTabs();
+      renderStartButton();
+      renderReplayControls();
+      syncListenerToActiveEntity();
+      saveEntitiesCache();
+    });
+    refreshLogs();
+    refreshReplays();
+    setInterval(refreshLogs, 1000);
+    setInterval(refreshReplays, 1500);
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
